@@ -12,7 +12,34 @@
     }
     *{box-sizing:border-box}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
+    
+    .phoneFrame{
+      max-width: 520px;
+      margin: 18px auto;
+      padding: 18px 14px;
+      border-radius: 34px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.0));
+      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+      position: relative;
+    }
+    .phoneFrame:before{
+      content:"";
+      position:absolute;
+      top:10px; left:50%;
+      width: 120px; height: 20px;
+      transform: translateX(-50%);
+      border-radius: 0 0 14px 14px;
+      background: rgba(0,0,0,.35);
+      border: 1px solid rgba(255,255,255,.08);
+    }
     .wrap{max-width:980px;margin:0 auto;padding:14px;display:grid;gap:12px}
+    @media (max-width: 560px){
+      .phoneFrame{max-width: 100%; margin:0; border-radius:0; border:none; padding:10px 10px}
+      .phoneFrame:before{display:none}
+      .wrap{max-width:100%; padding:0}
+    }
+
     .card{background:rgba(15,27,51,.85);border:1px solid var(--line);border-radius:18px;padding:14px}
     .row{display:flex;gap:10px;flex-wrap:wrap}
     .row>div{flex:1 1 220px}
@@ -55,7 +82,8 @@
   </style>
 </head>
 <body>
-<div class="wrap">
+<div class="phoneFrame">
+  <div class="wrap">
 
   <div class="card">
     <div class="row">
@@ -104,6 +132,7 @@
     </div>
   </div>
 
+</div>
 </div>
 
 <script>
@@ -160,7 +189,7 @@
   function extractRoom(d){ return d.room || d.name || ""; }
   function extractUser(d){ return String(d.username || d.from || d.user || "").trim(); }
   function extractBody(d){ return d.body || d.text || ""; }
-  function extractAvatar(d){ return d.avatar || d.image || d.pic || d.photo || ""; }
+  function extractAvatar(d){ return d.avatar_url || d.avatar || d.image || d.pic || d.photo || ""; }
 
   // echo-dedupe: keep optimistic UI, skip server echo duplicates (same body from me within short window)
   const pendingEcho = []; // {t:number, body:string}
