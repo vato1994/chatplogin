@@ -1,0 +1,426 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ChatP – Clean Room Chat (Fixed Join)</title>
+  <style>
+    :root{
+      --bg:#0b1220; --card:#0f1b33; --line:#23385f;
+      --text:#e5e7eb; --muted:#9ca3af; --me:#1f3b6b; --you:#0e2a52;
+      --ok:#22c55e; --bad:#ef4444;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
+    .wrap{max-width:980px;margin:0 auto;padding:14px;display:grid;gap:12px}
+    .card{background:rgba(15,27,51,.85);border:1px solid var(--line);border-radius:18px;padding:14px}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .row>div{flex:1 1 220px}
+    label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+    input,button,textarea{
+      width:100%; border-radius:12px; border:1px solid var(--line);
+      background:#081022; color:var(--text); padding:10px 12px; outline:none;
+    }
+    button{cursor:pointer;background:#13284e;font-weight:700}
+    button:disabled{opacity:.55;cursor:not-allowed}
+    .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .pill{font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+    .pill.ok{border-color:rgba(34,197,94,.5);color:#bbf7d0}
+    .pill.bad{border-color:rgba(239,68,68,.5);color:#fecaca}
+    .status{color:var(--muted);font-size:13px;margin-top:8px}
+    .shell{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:rgba(15,27,51,.7);display:grid;grid-template-rows:auto 1fr auto;min-height:70vh}
+    .header{padding:12px 14px;border-bottom:1px solid var(--line);background:rgba(8,16,34,.55);display:flex;justify-content:space-between;align-items:center}
+    .title{font-weight:800}
+    .sub{font-size:12px;color:var(--muted)}
+    .chat{padding:14px;overflow:auto;display:flex;flex-direction:column;gap:10px}
+    .msg{display:flex;gap:10px;align-items:flex-end}
+    .msg.me{flex-direction:row-reverse}
+    .avatar{width:34px;height:34px;border-radius:999px;border:1px solid var(--line);object-fit:cover;background:#0b1630}
+    .bubble{
+      max-width:min(720px, 86%);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:10px 12px;
+      background:var(--you);
+      box-shadow:0 6px 20px rgba(0,0,0,.18);
+    }
+    .msg.me .bubble{background:var(--me)}
+    .meta{display:flex;gap:8px;align-items:center;margin-bottom:4px}
+    .name{font-size:12px;color:#c7d2fe;font-weight:800}
+    .time{font-size:11px;color:var(--muted)}
+    .text{white-space:pre-wrap;word-break:break-word;line-height:1.25}
+    .composer{border-top:1px solid var(--line);padding:12px;background:rgba(8,16,34,.45);display:flex;gap:10px;align-items:flex-end}
+    textarea{min-height:46px;max-height:140px;resize:vertical}
+    .right{display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <label>Username</label>
+        <input id="u" placeholder="username" />
+      </div>
+      <div>
+        <label>Password</label>
+        <input id="p" type="password" placeholder="password" />
+      </div>
+      <div>
+        <label>Room Name (exact)</label>
+        <input id="r" placeholder="e.g. Cricket / Bet / Pakistani" />
+      </div>
+    </div>
+
+    <div class="bar" style="margin-top:10px">
+      <button id="connect">Connect + Login + Join</button>
+      <button id="join" disabled>Join (once)</button>
+      <button id="disc" disabled>Disconnect</button>
+      <span id="connPill" class="pill bad">DISCONNECTED</span>
+      <span id="tokPill" class="pill">token: none</span>
+    </div>
+
+    <div id="status" class="status">Ready.</div>
+  </div>
+
+  <div class="shell">
+    <div class="header">
+      <div>
+        <div class="title" id="roomTitle">Room: —</div>
+        <div class="sub" id="roomSub">Not connected</div>
+      </div>
+      <div class="sub">Ctrl+Enter = send</div>
+    </div>
+
+    <div id="chat" class="chat"></div>
+
+    <div class="composer">
+      <textarea id="msg" placeholder="Type message…"></textarea>
+      <div class="right">
+        <button id="send" disabled>Send</button>
+        <button id="sendDot" disabled>Send “.”</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // ✅ WS URL hardcoded
+  const WS_URL = "wss://chatp.net:5333/server";
+
+  const $ = (id) => document.getElementById(id);
+  const el = {
+    u: $("u"), p: $("p"), r: $("r"),
+    connect: $("connect"), join: $("join"), disc: $("disc"),
+    connPill: $("connPill"), tokPill: $("tokPill"),
+    status: $("status"),
+    roomTitle: $("roomTitle"), roomSub: $("roomSub"),
+    chat: $("chat"),
+    msg: $("msg"),
+    send: $("send"),
+    sendDot: $("sendDot"),
+  };
+
+  let ws = null;
+  let token = null;
+  let loggedIn = false;
+  let joined = false;
+
+  // join control (prevents "join/left/join" spam)
+  let joinInFlight = false;
+  let joinAttempts = 0;
+  let joinTimeout = null;
+
+  const now = () => new Date().toTimeString().slice(0,5);
+  const genId = () => String(Math.floor(1000000000 + Math.random()*90000000000));
+
+  function setStatus(s){ el.status.textContent = s; el.roomSub.textContent = s; }
+  function setConn(ok){
+    el.connPill.textContent = ok ? "CONNECTED" : "DISCONNECTED";
+    el.connPill.className = "pill " + (ok ? "ok" : "bad");
+  }
+  function setTok(){
+    el.tokPill.textContent = "token: " + (token ? "ok" : "none");
+    el.tokPill.style.opacity = token ? "1" : ".7";
+  }
+  function ui(){
+    const open = ws && ws.readyState === WebSocket.OPEN;
+    el.connect.disabled = !!open;
+    el.disc.disabled = !open;
+    el.join.disabled = !open || !loggedIn || joinInFlight; // disable while join is in-flight
+    el.send.disabled = !open || !joined;
+    el.sendDot.disabled = !open || !joined;
+    setConn(!!open);
+    setTok();
+  }
+
+  function extractRoom(d){ return d.room || d.name || ""; }
+  function extractUser(d){ return String(d.username || d.from || d.user || "").trim(); }
+  function extractBody(d){ return d.body || d.text || ""; }
+  function extractAvatar(d){ return d.avatar || d.image || d.pic || d.photo || ""; }
+
+  // echo-dedupe: keep optimistic UI, skip server echo duplicates (same body from me within short window)
+  const pendingEcho = []; // {t:number, body:string}
+  const ECHO_WINDOW_MS = 2500;
+  function noteOutgoing(body){
+    const nowMs = Date.now();
+    pendingEcho.push({ t: nowMs, body });
+    // trim old
+    while (pendingEcho.length && (nowMs - pendingEcho[0].t) > ECHO_WINDOW_MS) pendingEcho.shift();
+  }
+  function consumeIfEcho(body){
+    const nowMs = Date.now();
+    for (let i=0; i<pendingEcho.length; i++){
+      const it = pendingEcho[i];
+      if ((nowMs - it.t) <= ECHO_WINDOW_MS && it.body === body){
+        pendingEcho.splice(i,1);
+        return true;
+      }
+    }
+    return false;
+  }
+
+
+  function avatarFallback(username){
+    const u = (username || "?").trim();
+    const initials = u ? u.slice(0,2).toUpperCase() : "??";
+    const svg =
+      `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64">
+        <rect width="100%" height="100%" rx="32" ry="32" fill="#0b1630"/>
+        <text x="50%" y="54%" text-anchor="middle" font-family="Arial" font-size="24" fill="#e5e7eb">${initials}</text>
+      </svg>`;
+    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  }
+
+  function addMsg({me=false, username="system", avatar="", text=""}){
+    const wrap = document.createElement("div");
+    wrap.className = "msg" + (me ? " me" : "");
+
+    const img = document.createElement("img");
+    img.className = "avatar";
+    img.src = avatar || avatarFallback(username);
+    img.alt = username;
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+
+    const name = document.createElement("div");
+    name.className = "name";
+    name.textContent = username;
+
+    const time = document.createElement("div");
+    time.className = "time";
+    time.textContent = now();
+
+    meta.appendChild(name);
+    meta.appendChild(time);
+
+    const body = document.createElement("div");
+    body.className = "text";
+    body.textContent = text;
+
+    bubble.appendChild(meta);
+    bubble.appendChild(body);
+
+    wrap.appendChild(img);
+    wrap.appendChild(bubble);
+
+    el.chat.appendChild(wrap);
+    el.chat.scrollTop = el.chat.scrollHeight;
+  }
+
+  function sendObj(obj){
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    ws.send(JSON.stringify(obj));
+  }
+
+  function resetJoinState() {
+    joinInFlight = false;
+    joinAttempts = 0;
+    if (joinTimeout) {
+      clearTimeout(joinTimeout);
+      joinTimeout = null;
+    }
+  }
+
+  function login(){
+    const username = el.u.value.trim();
+    const password = el.p.value;
+    if (!username || !password) { setStatus("❌ username/password missing"); return; }
+
+    sendObj({ handler:"login", username, password, ip:false, type:2 });
+    setStatus("🔐 Login sent…");
+  }
+
+  function requestJoin() {
+    const roomName = el.r.value.trim();
+    if (!roomName){ setStatus("❌ room name missing"); return; }
+    if (!token){ setStatus("❌ token missing (wait login_success)"); return; }
+
+    // if already joined, don't spam
+    if (joined) { setStatus("✅ already joined"); return; }
+
+    // if a join attempt is already running, don't start another
+    if (joinInFlight) { setStatus("⏳ join already in progress…"); return; }
+
+    el.roomTitle.textContent = "Room: " + roomName;
+
+    joinInFlight = true;
+    joinAttempts = 0;
+    ui();
+
+    const tryJoin = () => {
+      if (!ws || ws.readyState !== WebSocket.OPEN) { resetJoinState(); ui(); return; }
+      if (joined) { resetJoinState(); ui(); return; }
+
+      joinAttempts += 1;
+      sendObj({ handler:"room_join", id: genId(), name: roomName, s: token });
+      setStatus(`🚪 room_join sent (try ${joinAttempts}/2)…`);
+
+      // Only retry once IF we don't get any room activity within 1.2s.
+      if (joinAttempts < 2) {
+        joinTimeout = setTimeout(tryJoin, 1200);
+      } else {
+        // after last try, keep joinInFlight for a short window, then release
+        joinTimeout = setTimeout(() => {
+          joinInFlight = false;
+          ui();
+          setStatus("ℹ️ join sent. Waiting for room activity…");
+        }, 1200);
+      }
+    };
+
+    tryJoin();
+  }
+
+  function sendRoomMsg(text){
+    const roomName = el.r.value.trim();
+    if (!roomName) return;
+
+    const body = String(text ?? "");
+    sendObj({
+      handler:"room_message",
+      id: genId(),
+      room: roomName,
+      type: "text",
+      url: "",
+      body,
+      length: String(body.length),
+    });
+
+    
+    noteOutgoing(body);
+addMsg({ me:true, username: el.u.value.trim() || "me", avatar:"", text: body });
+  }
+
+  function connect(){
+    const roomName = el.r.value.trim();
+    token = null; loggedIn = false; joined = false;
+    resetJoinState();
+
+    el.roomTitle.textContent = "Room: " + (roomName || "—");
+    ui();
+
+    ws = new WebSocket(WS_URL);
+
+    ws.onopen = () => { setStatus("✅ WS connected"); ui(); login(); };
+
+    ws.onmessage = (ev) => {
+      let data;
+      try { data = JSON.parse(String(ev.data || "")); } catch { return; }
+
+      const h = data.handler;
+
+      // login success
+      if (h === "login_event" || h === "login_success" || h === "auth_ok") {
+        token = data.s || data.session || data.token || null;
+        loggedIn = true;
+        setTok();
+        setStatus("✅ Login OK — joining room…");
+        ui();
+        requestJoin();
+        return;
+      }
+
+      // ignore other rooms
+      const want = el.r.value.trim();
+      const got = extractRoom(data);
+      if (want && got && String(got).toLowerCase() !== String(want).toLowerCase()) return;
+
+      // treat these as join confirmation / room activity
+      if (!joined && (h === "room_event" || h === "room_join" || h === "room_joined")) {
+        joined = true;
+        resetJoinState();
+        setStatus("✅ Joined");
+        ui();
+      }
+
+      const user = extractUser(data);
+      const text = (extractBody(data) || "").trim();
+      if (!text) return;
+
+      if (!joined) {
+        // first room message = joined/active
+        joined = true;
+        resetJoinState();
+        setStatus("✅ Joined (room message received)");
+        ui();
+      }
+
+            // If server echoes back the exact same message we just optimistically rendered, skip it
+      const meName = (el.u.value.trim() || '').toLowerCase();
+      const fromMe = user && user.toLowerCase() === meName;
+      if (fromMe && consumeIfEcho(text)) return;
+
+addMsg({
+        me: user && user.toLowerCase() === (el.u.value.trim().toLowerCase()),
+        username: user || "system",
+        avatar: extractAvatar(data) || "",
+        text
+      });
+    };
+
+    ws.onerror = () => { setStatus("⚠️ WS error"); ui(); };
+    ws.onclose = () => {
+      setStatus("🔌 disconnected");
+      ws = null; token = null; loggedIn = false; joined = false;
+      resetJoinState();
+      ui();
+    };
+
+    ui();
+  }
+
+  function disconnect(){ if (ws) ws.close(); }
+
+  // UI hooks
+  el.connect.addEventListener("click", connect);
+  el.join.addEventListener("click", () => requestJoin());
+  el.disc.addEventListener("click", disconnect);
+
+  el.send.addEventListener("click", () => {
+    const t = el.msg.value;
+    if (!t.trim()) return;
+    sendRoomMsg(t);
+    el.msg.value = "";
+  });
+  el.sendDot.addEventListener("click", () => sendRoomMsg("."));
+
+  el.msg.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      el.send.click();
+    }
+  });
+
+  ui();
+})();
+</script>
+</body>
+</html>
