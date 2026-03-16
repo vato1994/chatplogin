@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <title>Howdies Mobile Chat HTML</title>
 <style>
   :root {
@@ -273,9 +276,9 @@
     <div class="desktop-scroll">
       <div class="card">
         <div class="section-title">Login</div>
-        <input id="usernameDesk" class="field" placeholder="Username" />
+        <input id="usernameDesk" class="field" placeholder="Username" autocomplete="off" autocapitalize="none" spellcheck="false" />
         <div style="height:8px"></div>
-        <input id="passwordDesk" type="password" class="field" placeholder="Password" />
+        <input id="passwordDesk" type="password" class="field" placeholder="Password" autocomplete="new-password" spellcheck="false" />
         <div style="height:8px"></div>
         <div class="row"><button id="loginBtnDesk" class="btn-primary">Login</button><button id="disconnectBtnDesk" class="btn-secondary">Disconnect</button></div>
       </div>
@@ -324,8 +327,8 @@
 
   <div id="loginCard" class="login-card">
     <div class="row">
-      <input id="username" class="field" placeholder="Username" />
-      <input id="password" type="password" class="field" placeholder="Password" />
+      <input id="username" class="field" placeholder="Username" autocomplete="off" autocapitalize="none" spellcheck="false" />
+      <input id="password" type="password" class="field" placeholder="Password" autocomplete="new-password" spellcheck="false" />
     </div>
     <div style="height:8px"></div>
     <div class="row">
@@ -485,6 +488,7 @@
   };
 
   function syncLoginFields(fromDesk = false) {
+    if (state.loggedIn) return;
     if (fromDesk) {
       els.username.value = els.usernameDesk.value;
       els.password.value = els.passwordDesk.value;
@@ -492,6 +496,30 @@
       els.usernameDesk.value = els.username.value;
       els.passwordDesk.value = els.password.value;
     }
+  }
+
+  function clearPasswordFields() {
+    els.password.value = '';
+    els.passwordDesk.value = '';
+  }
+
+  function lockLoginUi() {
+    clearPasswordFields();
+    els.username.readOnly = true;
+    els.usernameDesk.readOnly = true;
+    els.password.readOnly = true;
+    els.passwordDesk.readOnly = true;
+    els.password.placeholder = 'Password hidden';
+    els.passwordDesk.placeholder = 'Password hidden';
+  }
+
+  function unlockLoginUi() {
+    els.username.readOnly = false;
+    els.usernameDesk.readOnly = false;
+    els.password.readOnly = false;
+    els.passwordDesk.readOnly = false;
+    els.password.placeholder = 'Password';
+    els.passwordDesk.placeholder = 'Password';
   }
 
   function setStatus(kind, text) {
@@ -541,10 +569,10 @@
     syncLoginFields(false);
     state.username = els.username.value.trim();
     state.password = els.password.value;
-    if (!state.username || !state.password) return alert('Username/password chahiye.');
+    if (!state.username || !state.password) return alert('Please enter your username and password.');
     state.myName = state.username;
     try { state.ws?.close(); } catch {}
-    setStatus('connected', 'Connecting…');
+    setStatus('connected', 'Connecting');
     state.ws = new WebSocket(WS_URL);
     state.connected = false;
     state.loggedIn = false;
@@ -552,7 +580,7 @@
 
     state.ws.onopen = () => {
       state.connected = true;
-      setStatus('connected', 'Connected. Sending login…');
+      setStatus('connected', 'Authorizing');
       state.loginSent = wsSend({
         handler: 'loginnew',
         username: state.username,
@@ -583,7 +611,9 @@
       state.loginSent = false;
       stopRoomAutoRefresh();
       updateChatFullMode();
-      setStatus('offline', 'Disconnected');
+      unlockLoginUi();
+      clearPasswordFields();
+      setStatus('offline', 'Offline');
     };
   }
 
@@ -609,7 +639,9 @@
     if (!state.loggedIn && (msg.status === 'success' || msg.error === 0) && /login/.test(blob)) {
       state.loggedIn = true;
       updateChatFullMode();
-      setStatus('ready', 'Logged in');
+      lockLoginUi();
+      state.password = '';
+      setStatus('ready', 'Online');
       refreshRoomList(true);
       startRoomAutoRefresh();
     }
@@ -617,7 +649,9 @@
     if (['loginnew', 'loginnewsuccess', 'login'].includes(handler) && (/success/.test(blob) || msg.error === 0)) {
       state.loggedIn = true;
       updateChatFullMode();
-      setStatus('ready', 'Logged in');
+      lockLoginUi();
+      state.password = '';
+      setStatus('ready', 'Online');
       refreshRoomList(true);
       startRoomAutoRefresh();
     }
@@ -637,7 +671,7 @@
       const name = msg.name || roomNameById(rid) || `Room ${rid}`;
       ensureRoom(rid, name);
       activateRoom(rid);
-      setStatus('ready', `Ready in ${name}`);
+      setStatus('ready', name);
       refreshUsers();
       if (!isDesktop()) showDrawer(false);
     }
@@ -770,7 +804,7 @@
     renderUsers();
     renderUsersOverlay();
     updateRoomHero();
-    if (state.activeRoomId) setStatus('ready', `Ready in ${roomNameById(state.activeRoomId) || ('Room ' + state.activeRoomId)}`);
+    if (state.activeRoomId) setStatus('ready', roomNameById(state.activeRoomId) || ('Room ' + state.activeRoomId));
     else setStatus(state.connected ? 'connected' : 'offline', state.connected ? 'Connected' : 'Offline');
   }
 
@@ -967,7 +1001,7 @@
       sendMessage();
     } else {
       els.messageInput.focus();
-      setStatus('ready', `Secret target set: ${m.username} (${m.userid})`);
+      setStatus('ready', `Secret target: ${m.username} (${m.userid})`);
     }
   }
 
@@ -1031,7 +1065,7 @@
   function joinByName() {
     const raw = (els.roomName.value || els.roomNameDesk.value || '').trim();
     const q = normalizeRoomName(raw);
-    if (!q) return alert('Room name likho.');
+    if (!q) return alert('Please enter a room name.');
     ensureRoomListFresh(() => {
       const exact = state.roomList.find(r => normalizeRoomName(r.name) === q);
       const starts = state.roomList.find(r => normalizeRoomName(r.name).startsWith(q));
@@ -1095,16 +1129,15 @@
     let ok = false;
     if (state.sendMode === 'normal') {
       ok = wsSend({ handler: 'chatroommessage', roomid: rid, text, type: 'text' });
-      if (ok) selfEcho({ roomid: rid, text, type: 'text' });
     } else if (state.sendMode === 'secret') {
       const uid = Number((els.targetUserId.value || '').trim() || 0);
-      if (!uid) return alert('Secret ke liye target userid chahiye.');
+      if (!uid) return alert('Please enter a target user ID for secret mode.');
       ok = wsSend({ handler: 'chatroommessage', roomid: rid, userid: uid, secret: true, text, type: 'text' });
       if (ok) selfEcho({ roomid: rid, text, type: 'text', secret: true, userid: `${state.username} → ${uid}` });
     } else {
       const to = (els.pmUser.value || '').trim();
       const uid = Number((els.pmUserId.value || '').trim() || 0);
-      if (!to || !uid) return alert('PM username aur userid dono chahiye.');
+      if (!to || !uid) return alert('Please enter both PM username and user ID.');
       ok = wsSend({ handler: 'message', to, userid: uid, text, type: 'text' });
       if (ok) selfEcho({ roomid: rid || ensurePmRoom(), text, type: 'pm', userid: uid });
     }
