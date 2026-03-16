@@ -6,436 +6,170 @@
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
-<title>Howdies Mobile Chat HTML</title>
+<title>Arya Client</title>
 <style>
-  :root {
-    --bg: #0b0f14;
-    --panel: #121821;
-    --panel2: #192230;
-    --panel3: #223047;
-    --text: #eef2f7;
-    --muted: #9aa6b8;
-    --line: #263245;
-    --accent: #4f8cff;
-    --accent2: #7c3aed;
-    --green: #22c55e;
-    --amber: #f59e0b;
-    --red: #ef4444;
-    --bubble: #141c27;
-    --bubbleMine: #18263b;
-    --shadow: 0 10px 30px rgba(0,0,0,.28);
+  :root{
+    --bg:#0a0f15;--panel:#101824;--panel2:#141f2d;--panel3:#1c2b40;--line:#273448;
+    --text:#edf2f7;--muted:#8d9bb0;--blue:#3b82f6;--blue2:#2563eb;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;
+    --bubble:#111a27;--bubbleMine:#18283f;--shadow:0 14px 40px rgba(0,0,0,.28);
   }
-  * { box-sizing: border-box; }
-  html, body { height: 100%; }
-  body {
-    margin: 0;
-    background: linear-gradient(180deg, #0b0f14 0%, #0f1520 100%);
-    color: var(--text);
-    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    overflow: hidden;
-  }
-  button, input, textarea { font: inherit; }
-  .app {
-    height: 100svh;
-    display: grid;
-    grid-template-rows: auto auto 1fr auto;
-  }
-  .topbar {
-    padding: env(safe-area-inset-top) 12px 10px;
-    border-bottom: 1px solid var(--line);
-    background: rgba(11,15,20,.94);
-    backdrop-filter: blur(14px);
-    position: relative;
-    z-index: 20;
-  }
-  .topbar-row {
-    display: flex; align-items: center; gap: 10px;
-  }
-  .app-title { font-weight: 800; font-size: 17px; letter-spacing: .2px; }
-  .grow { flex: 1; }
-  .icon-btn, .chip, .send-btn, .small-btn {
-    border: 1px solid var(--line);
-    background: var(--panel2);
-    color: var(--text);
-    border-radius: 14px;
-    cursor: pointer;
-  }
-  .icon-btn {
-    width: 42px; height: 42px; display: grid; place-items: center; font-size: 24px;
-    box-shadow: var(--shadow);
-  }
-  .status-pill {
-    display: inline-flex; align-items: center; gap: 8px;
-    min-width: 0;
-    max-width: 100%;
-    padding: 9px 12px;
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    background: #151d28;
-    font-size: 13px;
-    font-weight: 700;
-  }
-  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-  .dot.red { background: var(--red); }
-  .dot.amber { background: var(--amber); }
-  .dot.green { background: var(--green); }
-
-  .login-card {
-    margin: 10px 12px 0;
-    padding: 12px;
-    background: rgba(18,24,33,.96);
-    border: 1px solid var(--line);
-    border-radius: 20px;
-    box-shadow: var(--shadow);
-  }
-  .field { width: 100%; border: 1px solid var(--line); background: var(--panel2); color: var(--text); border-radius: 14px; padding: 12px 14px; }
-  .field::placeholder, textarea::placeholder { color: #8190a4; }
-  .row { display: flex; gap: 8px; }
-  .row > * { flex: 1; }
-  .btn-primary {
-    width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid #36538d; background: linear-gradient(180deg, #366ae6 0%, #2955be 100%); color: white; font-weight: 800; cursor: pointer;
-  }
-  .btn-secondary { width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel2); color: var(--text); cursor: pointer; }
-  .mini-hint { color: var(--muted); font-size: 12px; line-height: 1.35; }
-
-  .tabs-wrap {
-    border-bottom: 1px solid var(--line);
-    background: rgba(11,15,20,.92);
-    backdrop-filter: blur(14px);
-    position: relative; z-index: 8;
-  }
-  .tabs {
-    display: flex; gap: 8px; overflow-x: auto; padding: 10px 12px; scrollbar-width: none;
-  }
-  .tabs::-webkit-scrollbar { display: none; }
-  .tab {
-    flex: 0 0 auto;
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 10px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel2); cursor: pointer; white-space: nowrap; min-height: 42px;
-  }
-  .tab.active { background: linear-gradient(180deg, #24416c 0%, #1c3355 100%); border-color: #355883; }
-  .badge { min-width: 18px; height: 18px; padding: 0 6px; border-radius: 999px; display: inline-grid; place-items: center; font-size: 11px; background: #d946ef; color: white; }
-
-  .chat-area {
-    min-height: 0;
-    overflow: hidden;
-    display: grid;
-    grid-template-rows: 1fr;
-  }
-  .messages {
-    min-height: 0;
-    overflow-y: auto;
-    padding: 8px 10px 18px;
-    display: flex; flex-direction: column; gap: 8px;
-    -webkit-overflow-scrolling: touch;
-  }
-  .empty-state {
-    margin: auto; text-align: center; color: var(--muted); padding: 28px 20px;
-  }
-  .msg {
-    display: flex; gap: 10px; align-items: flex-start;
-    padding: 10px; border-radius: 18px; border: 1px solid var(--line);
-    background: var(--bubble); box-shadow: var(--shadow);
-  }
-  .msg.mine { background: var(--bubbleMine); }
-  .avatar-wrap { width: 44px; height: 44px; flex: 0 0 44px; position: relative; }
-  .avatar, .avatar-gif {
-    width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: #0e141e; object-fit: cover; display: block;
-  }
-  .avatar-fallback {
-    width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; background: #0e141e; color: #b7c2d4; font-size: 20px;
-  }
-  .msg-main { min-width: 0; flex: 1; }
-  .msg-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 6px; }
-  .uname { font-weight: 800; }
-  .uid-chip, .meta-chip {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 4px 8px; border-radius: 999px; background: #111926; border: 1px solid var(--line); color: var(--muted); font-size: 12px;
-  }
-  .uid-chip { cursor: pointer; }
-  .msg-text {
-    white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; line-height: 1.45; font-size: 15px;
-  }
-  .media, .gif-media {
-    display: block; width: min(100%, 320px); max-height: 320px; object-fit: contain; border-radius: 14px; margin-top: 8px; border: 1px solid var(--line); background: #0c121a;
-  }
-  .msg-actions {
-    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;
-  }
-  .small-btn { padding: 7px 9px; font-size: 11px; }
-
-  .composer {
-    position: sticky;
-    bottom: 0;
-    min-height: 20svh;
-    max-height: 20svh;
-    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
-    background: linear-gradient(180deg, rgba(11,15,20,.15) 0%, rgba(11,15,20,.94) 12%, rgba(11,15,20,.99) 100%);
-    backdrop-filter: blur(16px);
-    border-top: 1px solid var(--line);
-    z-index: 15;
-    display: grid;
-    grid-template-rows: auto auto 1fr auto;
-    gap: 5px;
-  }
-  .mode-strip { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
-  .mode-strip::-webkit-scrollbar { display: none; }
-  .chip { padding: 6px 8px; white-space: nowrap; font-size: 12px; min-height: 30px; border-radius: 12px; }
-  .chip.active { background: linear-gradient(180deg, #24416c 0%, #1c3355 100%); border-color: #355883; }
-  .target-row { display: flex; gap: 5px; margin-bottom: 0; }
-  .target-row > * { flex: 1; min-width: 0; }
-  textarea.field {
-    min-height: 44px; max-height: 72px; resize: none;
-    padding: 10px 46px 10px 12px;
-    line-height: 1.25;
-  }
-  .compose-wrap { position: relative; }
-  .send-btn {
-    position: absolute; right: 6px; bottom: 6px; width: 32px; height: 32px;
-    display: grid; place-items: center; font-size: 18px;
-    background: linear-gradient(180deg, #366ae6 0%, #2955be 100%);
-    border-color: #36538d; color: white;
-  }
-  .compose-tools { display: flex; gap: 6px; margin-top: 0; }
-  .compose-tools > * { flex: 1; }
-
-  .drawer-backdrop {
-    position: fixed; inset: 0; background: rgba(0,0,0,.5); opacity: 0; pointer-events: none; transition: .2s; z-index: 40;
-  }
-  .drawer-backdrop.show { opacity: 1; pointer-events: auto; }
-  .drawer {
-    position: fixed; inset: 0 auto 0 0; width: min(92vw, 360px); background: #101721; border-right: 1px solid var(--line);
-    transform: translateX(-100%); transition: .25s ease; z-index: 45; display: flex; flex-direction: column; box-shadow: var(--shadow);
-  }
-  .drawer.show { transform: translateX(0); }
-  .drawer-head { padding: calc(12px + env(safe-area-inset-top)) 12px 12px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px; }
-  .drawer-title { font-weight: 800; }
-  .drawer-body { min-height: 0; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 12px; }
-  .list { display: flex; flex-direction: column; gap: 8px; }
-  .room-item, .user-item {
-    padding: 11px 12px; border-radius: 14px; background: var(--panel2); border: 1px solid var(--line); cursor: pointer;
-  }
-  .room-item.active { outline: 2px solid #3c6dd5; }
-  .room-top { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
-  .room-name { font-weight: 800; }
-  .meta { color: var(--muted); font-size: 12px; }
-  .pill-mini { padding: 3px 7px; border-radius: 999px; border: 1px solid var(--line); background: #121b29; font-size: 11px; color: var(--muted); }
-  .section-title { font-size: 13px; font-weight: 800; color: var(--muted); margin-bottom: 8px; }
-  .search-hit { outline: 2px solid #f59e0b; }
-  .hidden { display: none !important; }
-
-  @media (min-width: 920px) {
-    .app { grid-template-columns: 320px 1fr 320px; grid-template-rows: auto auto 1fr auto; }
-    .topbar, .tabs-wrap, .chat-area, .composer { grid-column: 2; }
-    .left-pane, .right-pane {
-      display: flex !important;
-      flex-direction: column;
-      min-height: 0;
-      border-right: 1px solid var(--line);
-      background: rgba(16,23,33,.94);
-    }
-    .right-pane { grid-column: 3; border-right: 0; border-left: 1px solid var(--line); }
-    .left-pane { grid-column: 1; grid-row: 1 / span 4; }
-    .right-pane { grid-row: 1 / span 4; }
-    .drawer, .drawer-backdrop { display: none; }
-    .desktop-panel-head { padding: 18px 14px 12px; border-bottom: 1px solid var(--line); font-weight: 800; }
-    .desktop-scroll { min-height: 0; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
-    .topbar { padding-top: 12px; }
-  }
-
-  .chat-full .login-card, .chat-full .tabs-wrap { display: none; }
-  .chat-full .app { grid-template-rows: auto minmax(0, 1fr) 20svh; }
-  .chat-full .chat-area { grid-row: 2; min-height: 0; }
-  .chat-full .composer { grid-row: 3; }
-  .chat-full .topbar { padding: env(safe-area-inset-top) 8px 6px; }
-  .chat-full .topbar-row { gap: 6px; }
-  .chat-full .icon-btn { width: 34px; height: 34px; font-size: 18px; border-radius: 12px; }
-  .chat-full .app-title { font-size: 15px; }
-  .chat-full #leaveBtnTop, .chat-full #refreshUsersTop { padding: 7px 9px !important; font-size: 12px; }
-  .chat-full .status-pill { padding: 7px 10px; font-size: 12px; }
-  .chat-full .tabs { padding: 6px 8px; gap: 6px; }
-  .chat-full .tab { padding: 7px 10px; min-height: 32px; font-size: 12px; }
-  .chat-full .field { padding: 8px 10px; border-radius: 12px; font-size: 13px; }
-  .users-overlay {
-    position: fixed; inset: 0; z-index: 60; background: rgba(11,15,20,.98);
-    transform: translateX(100%); transition: .22s ease; display: flex; flex-direction: column;
-    pointer-events: none;
-  }
-  .users-overlay.show { transform: translateX(0); pointer-events: auto; }
-  .users-head { padding: calc(12px + env(safe-area-inset-top)) 12px 12px; border-bottom: 1px solid var(--line); display:flex; align-items:center; gap:8px; background:#101721; }
-  .users-body { min-height:0; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:8px; }
-  .users-title { font-weight:800; }
-
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{margin:0;background:linear-gradient(180deg,#091018 0%,#0d1520 100%);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);overflow:hidden}
+  button,input,textarea{font:inherit}
+  .app{height:100svh;display:flex;flex-direction:column}
+  .hidden{display:none!important}
+  .screen{display:none;flex-direction:column;min-height:0;flex:1}
+  .screen.active{display:flex}
+  .topbar{padding:calc(env(safe-area-inset-top) + 10px) 12px 10px;border-bottom:1px solid var(--line);background:rgba(10,15,21,.95);backdrop-filter:blur(16px);display:flex;align-items:center;gap:8px;box-shadow:var(--shadow);position:relative;z-index:20}
+  .title{font-weight:800;font-size:17px;letter-spacing:.2px}
+  .grow{flex:1}
+  .icon-btn,.pill-btn,.small-btn,.send-btn,.room-chip{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:14px;cursor:pointer}
+  .icon-btn{width:40px;height:40px;display:grid;place-items:center;font-size:20px}
+  .small-btn{padding:8px 10px;font-size:12px}
+  .pill-btn{padding:10px 12px;font-weight:700}
+  .field{width:100%;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:16px;padding:13px 14px;outline:none}
+  .field::placeholder,textarea::placeholder{color:#7c8aa0}
+  .login-wrap{flex:1;display:grid;place-items:center;padding:18px}
+  .login-card{width:min(100%,420px);background:rgba(16,24,36,.96);border:1px solid var(--line);border-radius:24px;padding:18px;box-shadow:var(--shadow)}
+  .brand{font-size:28px;font-weight:900;margin-bottom:4px}
+  .sub{color:var(--muted);font-size:13px;line-height:1.4;margin-bottom:14px}
+  .stack{display:flex;flex-direction:column;gap:10px}
+  .btn-primary{width:100%;padding:13px 14px;border:none;border-radius:16px;background:linear-gradient(180deg,var(--blue) 0%,var(--blue2) 100%);color:#fff;font-weight:800;cursor:pointer}
+  .status{display:inline-flex;align-items:center;gap:8px;padding:8px 11px;border-radius:999px;border:1px solid var(--line);background:#121b28;font-size:12px;font-weight:700}
+  .dot{width:10px;height:10px;border-radius:50%}.red{background:var(--red)}.amber{background:var(--amber)}.green{background:var(--green)}
+  .lobby-head{padding:12px;border-bottom:1px solid var(--line);background:rgba(10,15,21,.92)}
+  .join-card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:10px}
+  .row{display:flex;gap:8px}.row>*{flex:1;min-width:0}
+  .lobby-body{flex:1;min-height:0;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:12px}
+  .section-title{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800}
+  .joined-strip{display:flex;gap:8px;overflow:auto;padding-bottom:2px}.joined-strip::-webkit-scrollbar{display:none}
+  .room-chip{padding:10px 12px;white-space:nowrap;display:inline-flex;align-items:center;gap:8px}
+  .badge{min-width:18px;height:18px;padding:0 6px;border-radius:999px;display:grid;place-items:center;background:#d946ef;color:#fff;font-size:11px}
+  .room-list{display:flex;flex-direction:column;gap:8px}
+  .room-item{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:12px;cursor:pointer}
+  .room-item:active{transform:scale(.995)}
+  .room-name{font-weight:800}
+  .meta{color:var(--muted);font-size:12px}
+  .room-top{display:flex;justify-content:space-between;gap:10px;align-items:center}
+  .chat-header{padding:calc(env(safe-area-inset-top) + 10px) 10px 10px;border-bottom:1px solid var(--line);background:rgba(10,15,21,.95);backdrop-filter:blur(16px);display:flex;align-items:center;gap:8px;box-shadow:var(--shadow);position:relative;z-index:15}
+  .chat-head-meta{min-width:0}.chat-room-title{font-weight:800;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chat-room-sub{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .messages{flex:1;min-height:0;overflow:auto;padding:10px 10px 16px;display:flex;flex-direction:column;gap:8px;-webkit-overflow-scrolling:touch}
+  .empty{margin:auto;text-align:center;color:var(--muted);padding:24px}
+  .msg{display:flex;gap:10px;align-items:flex-start;background:var(--bubble);border:1px solid var(--line);border-radius:18px;padding:10px;box-shadow:var(--shadow)}
+  .msg.mine{background:var(--bubbleMine)}
+  .avatar-wrap{width:42px;height:42px;flex:0 0 42px}.avatar,.avatar-gif{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--line);background:#0f1621}.avatar-fallback{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#0f1621;border:1px solid var(--line)}
+  .msg-main{min-width:0;flex:1}.msg-head{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-bottom:6px}.uname{font-weight:800}.uid-chip,.meta-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:999px;background:#0f1723;border:1px solid var(--line);color:var(--muted);font-size:11px}.uid-chip{cursor:pointer}
+  .msg-text{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;line-height:1.43;font-size:14px}
+  .media,.gif-media{display:block;width:min(100%,320px);max-height:320px;object-fit:contain;border-radius:14px;margin-top:8px;border:1px solid var(--line);background:#0c121a}
+  .msg-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .composer{border-top:1px solid var(--line);background:rgba(10,15,21,.97);backdrop-filter:blur(16px);padding:8px 8px calc(8px + env(safe-area-inset-bottom));display:grid;grid-template-rows:auto auto auto;gap:6px}
+  .room-tabs{display:flex;gap:8px;overflow:auto;padding-bottom:2px}.room-tabs::-webkit-scrollbar{display:none}.tab{flex:0 0 auto;padding:8px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--text);display:inline-flex;align-items:center;gap:7px;cursor:pointer;white-space:nowrap}.tab.active{background:linear-gradient(180deg,#24416c 0%,#1c3355 100%);border-color:#355883}
+  .mode-strip{display:flex;gap:6px;overflow:auto}.mode-strip::-webkit-scrollbar{display:none}.mode-btn{padding:7px 9px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:12px;cursor:pointer;white-space:nowrap}.mode-btn.active{background:linear-gradient(180deg,#24416c 0%,#1c3355 100%);border-color:#355883}
+  .target-row{display:flex;gap:6px}.target-row>*{flex:1;min-width:0}
+  .compose-wrap{position:relative}textarea.field{min-height:48px;max-height:84px;resize:none;padding:12px 46px 12px 12px;line-height:1.25}.send-btn{position:absolute;right:7px;bottom:7px;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;background:linear-gradient(180deg,var(--blue) 0%,var(--blue2) 100%);color:#fff}
+  .users-sheet{position:fixed;inset:0;background:rgba(0,0,0,.54);display:none;z-index:60}.users-sheet.show{display:block}.users-panel{position:absolute;inset:auto 0 0 0;background:#0f1722;border-top-left-radius:22px;border-top-right-radius:22px;border-top:1px solid var(--line);height:min(76svh,640px);display:flex;flex-direction:column;box-shadow:var(--shadow)}
+  .users-head{padding:12px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}.users-body{flex:1;min-height:0;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+  .user-item{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:11px 12px;cursor:pointer}
+  .muted{color:var(--muted)}
 </style>
 </head>
 <body>
 <div class="app">
-  <aside class="left-pane hidden" id="leftPane">
-    <div class="desktop-panel-head">Rooms</div>
-    <div class="desktop-scroll">
-      <div class="card">
-        <div class="section-title">Login</div>
-        <input id="usernameDesk" class="field" placeholder="Username" autocomplete="off" autocapitalize="none" spellcheck="false" />
-        <div style="height:8px"></div>
-        <input id="passwordDesk" type="password" class="field" placeholder="Password" autocomplete="new-password" spellcheck="false" />
-        <div style="height:8px"></div>
-        <div class="row"><button id="loginBtnDesk" class="btn-primary">Login</button><button id="disconnectBtnDesk" class="btn-secondary">Disconnect</button></div>
-      </div>
-      <div class="card">
-        <div class="section-title">Add room</div>
-        <div class="row">
-          <input id="roomIdDesk" class="field" placeholder="Room ID" />
-          <button id="joinByIdDesk" class="btn-secondary">Join</button>
+  <section id="loginScreen" class="screen active">
+    <div class="topbar"><div class="title">Arya Client</div><div class="grow"></div><div id="statusPill" class="status"><span class="dot red"></span>Offline</div></div>
+    <div class="login-wrap">
+      <div class="login-card">
+        <div class="brand">Arya Client</div>
+        <div class="sub">Log in, open the room directory, join by room name or room ID, and switch between joined rooms like a real mobile app.</div>
+        <div class="stack">
+          <input id="username" class="field" placeholder="Username" />
+          <input id="password" type="password" class="field" placeholder="Password" />
+          <button id="loginBtn" class="btn-primary">Login</button>
         </div>
-        <div style="height:8px"></div>
-        <div class="row">
-          <input id="roomNameDesk" class="field" placeholder="Room name" />
-          <button id="joinByNameDesk" class="btn-secondary">By name</button>
-        </div>
-        <div style="height:8px"></div>
-        <button id="refreshRoomsDesk" class="btn-secondary">Refresh room list</button>
       </div>
-      <div class="card">
+    </div>
+  </section>
+
+  <section id="lobbyScreen" class="screen">
+    <div class="topbar">
+      <div class="title">Rooms</div>
+      <div class="grow"></div>
+      <button id="refreshRoomsBtn" class="small-btn">Refresh</button>
+      <button id="disconnectBtn" class="icon-btn">⎋</button>
+    </div>
+    <div class="lobby-head">
+      <div class="join-card">
+        <div class="row">
+          <input id="roomId" class="field" placeholder="Join by room ID" />
+          <button id="joinByIdBtn" class="pill-btn">Join</button>
+        </div>
+        <div class="row">
+          <input id="roomName" class="field" placeholder="Join by room name" />
+          <button id="joinByNameBtn" class="pill-btn">Join</button>
+        </div>
+        <input id="roomSearch" class="field" placeholder="Search room directory" />
+        <div id="roomsHint" class="muted" style="font-size:12px">Room directory will appear here after login.</div>
+      </div>
+    </div>
+    <div class="lobby-body">
+      <div>
         <div class="section-title">Joined rooms</div>
-        <div id="joinedRoomsDesk" class="list"></div>
+        <div id="joinedRooms" class="joined-strip"></div>
       </div>
-      <div class="card">
+      <div>
         <div class="section-title">Room directory</div>
-        <input id="roomSearchDesk" class="field" placeholder="Search rooms" />
-        <div style="height:8px"></div>
-        <div id="roomDirectoryDesk" class="list"></div>
+        <div id="roomDirectory" class="room-list"></div>
       </div>
     </div>
-  </aside>
+  </section>
 
-  <div class="topbar">
-    <div class="topbar-row">
-      <button id="menuBtn" class="icon-btn">☰</button>
-      <div class="app-title">Howdies Chat</div>
+  <section id="chatScreen" class="screen">
+    <div class="chat-header">
+      <button id="backToLobbyBtn" class="icon-btn">←</button>
+      <div class="chat-head-meta">
+        <div id="chatRoomTitle" class="chat-room-title">No room selected</div>
+        <div id="chatRoomMeta" class="chat-room-sub">Open a room from the room list</div>
+      </div>
       <div class="grow"></div>
-      <button id="plusBtn" class="icon-btn">＋</button>
+      <button id="usersBtn" class="small-btn">Users</button>
+      <button id="leaveBtn" class="small-btn">Leave</button>
     </div>
-    <div style="height:8px"></div>
-    <div class="topbar-row">
-      <div id="statusPill" class="status-pill"><span class="dot red"></span>Offline</div>
-      <div class="grow"></div>
-      <button id="leaveBtnTop" class="btn-secondary" style="width:auto;padding:10px 12px">Leave</button>
-      <button id="refreshUsersTop" class="btn-secondary" style="width:auto;padding:10px 12px">Users</button>
-    </div>
-  </div>
-
-  <div id="loginCard" class="login-card">
-    <div class="row">
-      <input id="username" class="field" placeholder="Username" autocomplete="off" autocapitalize="none" spellcheck="false" />
-      <input id="password" type="password" class="field" placeholder="Password" autocomplete="new-password" spellcheck="false" />
-    </div>
-    <div style="height:8px"></div>
-    <div class="row">
-      <button id="loginBtn" class="btn-primary">Login</button>
-      <button id="disconnectBtn" class="btn-secondary">Disconnect</button>
-    </div>
-    <div style="height:8px"></div>
-    <div class="mini-hint">Single-file HTML. The room list loads directly from the server using <b>getchatrooms + admin=username</b>, with no external file.</div>
-  </div>
-
-  <div class="tabs-wrap">
-    <div id="tabs" class="tabs"></div>
-  </div>
-
-  <main class="chat-area">
-    <div id="roomHero" style="padding:6px 10px;border-bottom:1px solid var(--line);background:rgba(12,18,26,.82);backdrop-filter:blur(10px)"><div style="font-weight:800;font-size:14px" id="roomHeroName">No room selected</div><div style="color:var(--muted);font-size:11px;margin-top:1px" id="roomHeroMeta">Log in, then join a room</div></div>
     <div id="messages" class="messages"></div>
-  </main>
-
-  <div class="composer">
-    <div class="mode-strip">
-      <button id="modeNormal" class="chip active">Normal</button>
-      <button id="modeSecret" class="chip">Secret</button>
-      <button id="modePm" class="chip">PM</button>
-      <button id="refreshRoomsMini" class="chip">Rooms</button>
-      <button id="openUsersMini" class="chip">Users</button>
-    </div>
-    <div class="target-row">
-      <input id="targetUserId" class="field" placeholder="Secret UserID" />
-      <input id="pmUser" class="field" placeholder="PM Username" />
-      <input id="pmUserId" class="field" placeholder="PM UserID" />
-    </div>
-    <div class="compose-wrap">
-      <textarea id="messageInput" class="field" placeholder="Type a message… Enter = send, Shift+Enter = new line"></textarea>
-      <button id="sendBtn" class="send-btn">➤</button>
-    </div>
-    <div class="compose-tools">
-      <input id="searchInput" class="field" placeholder="Search current room" />
-      <button id="searchBtn" class="btn-secondary">Find</button>
-    </div>
-  </div>
-
-  <aside class="right-pane hidden" id="rightPane">
-    <div class="desktop-panel-head">Current room users</div>
-    <div class="desktop-scroll">
-      <div class="card">
-        <div class="section-title">Double click se Secret/PM target fill hoga</div>
-        <div id="usersDesk" class="list"></div>
+    <div class="composer">
+      <div class="room-tabs" id="roomTabs"></div>
+      <div class="mode-strip">
+        <button id="modeNormal" class="mode-btn active">Normal</button>
+        <button id="modeSecret" class="mode-btn">Secret</button>
+        <button id="modePm" class="mode-btn">PM</button>
+        <button id="addRoomBtn" class="mode-btn">＋ Room</button>
+      </div>
+      <div class="target-row">
+        <input id="targetUserId" class="field" placeholder="Secret user ID" />
+        <input id="pmUser" class="field" placeholder="PM username" />
+        <input id="pmUserId" class="field" placeholder="PM user ID" />
+      </div>
+      <div class="compose-wrap">
+        <textarea id="messageInput" class="field" placeholder="Type your message"></textarea>
+        <button id="sendBtn" class="send-btn">➤</button>
       </div>
     </div>
-  </aside>
+  </section>
 </div>
 
-<div id="backdrop" class="drawer-backdrop"></div>
-<aside id="drawer" class="drawer">
-  <div class="drawer-head">
-    <button id="closeDrawer" class="icon-btn" style="width:38px;height:38px;font-size:18px">✕</button>
-    <div class="drawer-title">Rooms & Users</div>
-  </div>
-  <div class="drawer-body">
-    <div class="card">
-      <div class="section-title">Add room</div>
-      <div class="row">
-        <input id="roomId" class="field" placeholder="Room ID" />
-        <button id="joinByIdBtn" class="btn-secondary">Join</button>
+<div id="usersSheet" class="users-sheet">
+  <div class="users-panel">
+    <div class="users-head">
+      <button id="closeUsersBtn" class="icon-btn">←</button>
+      <div>
+        <div id="usersTitle" class="title" style="font-size:15px">Room users</div>
+        <div id="usersMeta" class="meta">Current room</div>
       </div>
-      <div style="height:8px"></div>
-      <div class="row">
-        <input id="roomName" class="field" placeholder="Room name" />
-        <button id="joinByNameBtn" class="btn-secondary">By name</button>
-      </div>
-      <div style="height:8px"></div>
-      <button id="refreshRoomsBtn" class="btn-secondary">Refresh room list</button>
-      <div id="roomsHint" class="mini-hint" style="margin-top:8px">The room list refreshes automatically after login.</div>
+      <div class="grow"></div>
+      <button id="refreshUsersBtn" class="small-btn">Refresh</button>
     </div>
-
-    <div class="card">
-      <div class="section-title">Joined rooms</div>
-      <div id="joinedRooms" class="list"></div>
-    </div>
-
-    <div class="card">
-      <div class="section-title">Room directory</div>
-      <input id="roomSearch" class="field" placeholder="Search room directory" />
-      <div style="height:8px"></div>
-      <div id="roomDirectory" class="list"></div>
-    </div>
-
-    <div class="card">
-      <div class="section-title">Current room users</div>
-      <div id="users" class="list"></div>
-    </div>
+    <div id="usersList" class="users-body"></div>
   </div>
-</aside>
-
-
-<div id="usersOverlay" class="users-overlay">
-  <div class="users-head">
-    <button id="closeUsersOverlay" class="icon-btn" style="width:38px;height:38px;font-size:18px">←</button>
-    <div>
-      <div id="usersOverlayTitle" class="users-title">Room users</div>
-      <div id="usersOverlayMeta" class="meta">Current room</div>
-    </div>
-    <div class="grow"></div>
-    <button id="refreshUsersOverlay" class="btn-secondary" style="width:auto;padding:8px 10px">Refresh</button>
-  </div>
-  <div id="usersOverlayList" class="users-body"></div>
 </div>
 
 <script>
@@ -443,177 +177,74 @@
   const WS_URL = 'wss://app.howdies.app/howdies/';
   const IMAGE_RE = /(https?:\/\/\S+?(?:\.png|\.jpg|\.jpeg|\.gif|\.webp|\.bmp))(?!\S)/i;
   const URL_RE = /(https?:\/\/\S+)/ig;
-  const isDesktop = () => window.matchMedia('(min-width: 920px)').matches;
 
   const state = {
     ws: null,
     connected: false,
     loggedIn: false,
-    loginSent: false,
     username: '',
     password: '',
+    myName: '',
     roomList: [],
     roomListStamp: 0,
     roomTimer: null,
     rooms: new Map(),
     activeRoomId: null,
     sendMode: 'normal',
-    searchIndex: -1,
-    drawerOpen: false,
-    touchTimer: null,
-    myName: '',
+    lastUid: null,
+    lastUidAt: 0,
   };
 
   const $ = id => document.getElementById(id);
   const els = {
-    statusPill: $('statusPill'),
-    menuBtn: $('menuBtn'), plusBtn: $('plusBtn'),
-    loginCard: $('loginCard'), username: $('username'), password: $('password'), loginBtn: $('loginBtn'), disconnectBtn: $('disconnectBtn'),
-    usernameDesk: $('usernameDesk'), passwordDesk: $('passwordDesk'), loginBtnDesk: $('loginBtnDesk'), disconnectBtnDesk: $('disconnectBtnDesk'),
-    tabs: $('tabs'), messages: $('messages'), roomHero: $('roomHero'), roomHeroName: $('roomHeroName'), roomHeroMeta: $('roomHeroMeta'),
-    messageInput: $('messageInput'), sendBtn: $('sendBtn'),
-    targetUserId: $('targetUserId'), pmUser: $('pmUser'), pmUserId: $('pmUserId'),
-    modeNormal: $('modeNormal'), modeSecret: $('modeSecret'), modePm: $('modePm'),
-    refreshRoomsMini: $('refreshRoomsMini'), openUsersMini: $('openUsersMini'),
-    roomId: $('roomId'), roomName: $('roomName'), joinByIdBtn: $('joinByIdBtn'), joinByNameBtn: $('joinByNameBtn'), refreshRoomsBtn: $('refreshRoomsBtn'), roomsHint: $('roomsHint'),
-    roomIdDesk: $('roomIdDesk'), roomNameDesk: $('roomNameDesk'), joinByIdDesk: $('joinByIdDesk'), joinByNameDesk: $('joinByNameDesk'), refreshRoomsDesk: $('refreshRoomsDesk'),
-    joinedRooms: $('joinedRooms'), joinedRoomsDesk: $('joinedRoomsDesk'),
-    roomSearch: $('roomSearch'), roomDirectory: $('roomDirectory'), roomSearchDesk: $('roomSearchDesk'), roomDirectoryDesk: $('roomDirectoryDesk'),
-    users: $('users'), usersDesk: $('usersDesk'),
-    searchInput: $('searchInput'), searchBtn: $('searchBtn'),
-    leaveBtnTop: $('leaveBtnTop'), refreshUsersTop: $('refreshUsersTop'),
-    backdrop: $('backdrop'), drawer: $('drawer'), closeDrawer: $('closeDrawer'),
-    leftPane: $('leftPane'), rightPane: $('rightPane'),
-    usersOverlay: $('usersOverlay'), closeUsersOverlay: $('closeUsersOverlay'), usersOverlayTitle: $('usersOverlayTitle'), usersOverlayMeta: $('usersOverlayMeta'), usersOverlayList: $('usersOverlayList'), refreshUsersOverlay: $('refreshUsersOverlay'),
+    loginScreen: $('loginScreen'), lobbyScreen: $('lobbyScreen'), chatScreen: $('chatScreen'),
+    statusPill: $('statusPill'), username: $('username'), password: $('password'), loginBtn: $('loginBtn'), disconnectBtn: $('disconnectBtn'),
+    roomId: $('roomId'), roomName: $('roomName'), joinByIdBtn: $('joinByIdBtn'), joinByNameBtn: $('joinByNameBtn'), refreshRoomsBtn: $('refreshRoomsBtn'), roomSearch: $('roomSearch'), roomsHint: $('roomsHint'), joinedRooms: $('joinedRooms'), roomDirectory: $('roomDirectory'),
+    backToLobbyBtn: $('backToLobbyBtn'), chatRoomTitle: $('chatRoomTitle'), chatRoomMeta: $('chatRoomMeta'), usersBtn: $('usersBtn'), leaveBtn: $('leaveBtn'),
+    messages: $('messages'), roomTabs: $('roomTabs'),
+    modeNormal: $('modeNormal'), modeSecret: $('modeSecret'), modePm: $('modePm'), addRoomBtn: $('addRoomBtn'),
+    targetUserId: $('targetUserId'), pmUser: $('pmUser'), pmUserId: $('pmUserId'), messageInput: $('messageInput'), sendBtn: $('sendBtn'),
+    usersSheet: $('usersSheet'), closeUsersBtn: $('closeUsersBtn'), refreshUsersBtn: $('refreshUsersBtn'), usersTitle: $('usersTitle'), usersMeta: $('usersMeta'), usersList: $('usersList'),
   };
 
-  function syncLoginFields(fromDesk = false) {
-    if (state.loggedIn) return;
-    if (fromDesk) {
-      els.username.value = els.usernameDesk.value;
-      els.password.value = els.passwordDesk.value;
-    } else {
-      els.usernameDesk.value = els.username.value;
-      els.passwordDesk.value = els.password.value;
-    }
-  }
-
-  function clearPasswordFields() {
-    els.password.value = '';
-    els.passwordDesk.value = '';
-  }
-
-  function lockLoginUi() {
-    clearPasswordFields();
-    els.username.readOnly = true;
-    els.usernameDesk.readOnly = true;
-    els.password.readOnly = true;
-    els.passwordDesk.readOnly = true;
-    els.password.placeholder = 'Password hidden';
-    els.passwordDesk.placeholder = 'Password hidden';
-  }
-
-  function unlockLoginUi() {
-    els.username.readOnly = false;
-    els.usernameDesk.readOnly = false;
-    els.password.readOnly = false;
-    els.passwordDesk.readOnly = false;
-    els.password.placeholder = 'Password';
-    els.passwordDesk.placeholder = 'Password';
+  function showScreen(name) {
+    ['loginScreen','lobbyScreen','chatScreen'].forEach(id => els[id].classList.remove('active'));
+    els[name].classList.add('active');
   }
 
   function setStatus(kind, text) {
     const cls = kind === 'ready' ? 'green' : kind === 'connected' ? 'amber' : 'red';
     els.statusPill.innerHTML = `<span class="dot ${cls}"></span>${escapeHtml(text)}`;
   }
-
-  function escapeHtml(s) {
-    return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  }
-
-  function linkify(s) {
-    return s.replace(URL_RE, u => `<a href="${u}" target="_blank" rel="noopener">${u}</a>`);
-  }
-
-  function showDrawer(show) {
-    state.drawerOpen = show;
-    els.drawer.classList.toggle('show', show);
-    els.backdrop.classList.toggle('show', show);
-  }
-
-  function updateChatFullMode() {
-    const full = !!state.loggedIn;
-    document.body.classList.toggle('chat-full', full);
-  }
-
-  function showUsersOverlay(show) {
-    els.usersOverlay.classList.toggle('show', !!show);
-    if (show) renderUsersOverlay();
-  }
-
-  function currentRoom() {
-    return state.rooms.get(state.activeRoomId) || null;
-  }
-
-  function wsSend(obj) {
-    if (!state.ws || state.ws.readyState !== WebSocket.OPEN) {
-      state.connected = false;
-      setStatus('offline', 'Offline');
-      return false;
-    }
-    state.ws.send(JSON.stringify(obj));
-    return true;
-  }
+  function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+  function linkify(s) { return s.replace(URL_RE, u => `<a href="${u}" target="_blank" rel="noopener">${u}</a>`); }
+  function wsSend(obj) { if (!state.ws || state.ws.readyState !== WebSocket.OPEN) return false; state.ws.send(JSON.stringify(obj)); return true; }
+  function currentRoom() { return state.rooms.get(state.activeRoomId) || null; }
+  function normalizeRoomName(x) { return String(x || '').toLowerCase().replace(/\s+/g,' ').trim(); }
 
   function connectAndLogin() {
-    syncLoginFields(false);
     state.username = els.username.value.trim();
     state.password = els.password.value;
     if (!state.username || !state.password) return alert('Please enter your username and password.');
     state.myName = state.username;
     try { state.ws?.close(); } catch {}
-    setStatus('connected', 'Connecting');
+    setStatus('connected','Connecting');
     state.ws = new WebSocket(WS_URL);
-    state.connected = false;
-    state.loggedIn = false;
-    state.loginSent = false;
-
     state.ws.onopen = () => {
       state.connected = true;
-      setStatus('connected', 'Authorizing');
-      state.loginSent = wsSend({
-        handler: 'loginnew',
-        username: state.username,
-        password: state.password,
-        fcmt: 'html-mobile-client',
-        lp: true,
-        loginType: 'H',
-        devData: {
-          uniqueID: `HTML-${state.username}-${Math.floor(Math.random()*9000+1000)}`,
-          manufacturer: 'browser',
-          buildNumber: '237',
-          apiLevel: -1,
-          language: 'en',
-          model: 'HTML',
-          brand: 'browser',
-          instanceID: 'html',
-          isEmulator: false,
-          isLowRamDevice: false,
-          OS: navigator.platform || 'browser',
-        }
+      setStatus('connected','Authorizing');
+      wsSend({
+        handler:'loginnew', username:state.username, password:state.password, fcmt:'html-mobile-client', lp:true, loginType:'H',
+        devData:{ uniqueID:`HTML-${state.username}-${Math.floor(Math.random()*9000+1000)}`, manufacturer:'browser', buildNumber:'237', apiLevel:-1, language:'en', model:'HTML', brand:'browser', instanceID:'html', isEmulator:false, isLowRamDevice:false, OS:navigator.platform || 'browser' }
       });
     };
     state.ws.onmessage = ev => handlePacket(ev.data);
-    state.ws.onerror = () => setStatus('offline', 'WebSocket error');
+    state.ws.onerror = () => setStatus('offline','WebSocket error');
     state.ws.onclose = () => {
-      state.connected = false;
-      state.loggedIn = false;
-      state.loginSent = false;
-      stopRoomAutoRefresh();
-      updateChatFullMode();
-      unlockLoginUi();
-      clearPasswordFields();
-      setStatus('offline', 'Offline');
+      state.connected = false; state.loggedIn = false; stopRoomAutoRefresh();
+      setStatus('offline','Offline');
+      els.password.value = '';
+      if (els.chatScreen.classList.contains('active') || els.lobbyScreen.classList.contains('active')) showScreen('loginScreen');
     };
   }
 
@@ -637,26 +268,12 @@
     const blob = JSON.stringify(msg).toLowerCase();
 
     if (!state.loggedIn && (msg.status === 'success' || msg.error === 0) && /login/.test(blob)) {
-      state.loggedIn = true;
-      updateChatFullMode();
-      lockLoginUi();
-      state.password = '';
-      setStatus('ready', 'Online');
-      refreshRoomList(true);
-      startRoomAutoRefresh();
+      onLoginSuccess();
     }
-
-    if (['loginnew', 'loginnewsuccess', 'login'].includes(handler) && (/success/.test(blob) || msg.error === 0)) {
-      state.loggedIn = true;
-      updateChatFullMode();
-      lockLoginUi();
-      state.password = '';
-      setStatus('ready', 'Online');
-      refreshRoomList(true);
-      startRoomAutoRefresh();
+    if (['loginnew','loginnewsuccess','login'].includes(handler) && (/success/.test(blob) || msg.error === 0)) {
+      onLoginSuccess();
     }
-
-    if (['getchatrooms', 'rooms', 'listRoom', 'Global'].includes(handler)) {
+    if (['getchatrooms','rooms','listRoom','Global'].includes(handler)) {
       const rooms = extractRooms(msg);
       if (rooms.length) {
         state.roomList = rooms;
@@ -665,37 +282,30 @@
         renderRoomDirectory();
       }
     }
-
     if (handler === 'joinchatroom' && (msg.error === 0 || msg.roomid || msg.roomId)) {
       const rid = Number(msg.roomid || msg.roomId || 0);
       const name = msg.name || roomNameById(rid) || `Room ${rid}`;
       ensureRoom(rid, name);
-      activateRoom(rid);
-      setStatus('ready', name);
+      activateRoom(rid, true);
       refreshUsers();
-      if (!isDesktop()) showDrawer(false);
+      setStatus('ready', name);
     }
-
     if (handler === 'leavechatroom' && (msg.error === 0 || msg.roomid || msg.roomId)) {
       const rid = Number(msg.roomid || msg.roomId || 0);
       if (state.rooms.has(rid)) removeRoom(rid);
     }
-
     if (handler === 'getusers' || handler === 'activeoccupants') {
       const rid = Number(msg.roomid || msg.roomId || state.activeRoomId || 0);
       const users = extractUsers(msg);
       if (rid && state.rooms.has(rid)) {
         state.rooms.get(rid).users = users;
         renderUsers();
-        renderUsersOverlay();
-        updateRoomHero();
+        updateChatHeader();
       }
     }
-
     if (handler === 'userjoin' || handler === 'userleft') {
       if (state.activeRoomId) refreshUsers();
     }
-
     if (handler === 'chatroommessage' || handler === 'message') {
       const inferredRid = handler === 'message' ? -1 : (state.activeRoomId || 0);
       const rid = Number(msg.roomid || msg.roomId || inferredRid || 0) || inferredRid || -1;
@@ -703,24 +313,28 @@
       const room = state.rooms.get(rid);
       room.messages.push(normalizeMessage(msg));
       if (state.activeRoomId !== rid) room.unread = (room.unread || 0) + 1;
-      renderRooms();
+      renderJoinedRooms();
       renderTabs();
       if (state.activeRoomId === rid) renderMessages();
     }
   }
 
+  function onLoginSuccess() {
+    state.loggedIn = true;
+    els.password.value = '';
+    setStatus('ready','Online');
+    showScreen('lobbyScreen');
+    refreshRoomList(true);
+    startRoomAutoRefresh();
+  }
+
   function extractRooms(msg) {
     let data = msg?.data ?? msg?.rooms ?? msg?.list ?? msg?.result ?? msg?.chatrooms ?? msg?.Global ?? msg?.global ?? [];
-    if (msg?.data && typeof msg.data === 'object' && !Array.isArray(msg.data)) {
-      data = msg.data.Global ?? msg.data.global ?? msg.data.rooms ?? msg.data.list ?? msg.data.data ?? data;
-    }
+    if (msg?.data && typeof msg.data === 'object' && !Array.isArray(msg.data)) data = msg.data.Global ?? msg.data.global ?? msg.data.rooms ?? msg.data.list ?? msg.data.data ?? data;
     if (!Array.isArray(data) && Array.isArray(msg?.data?.data)) data = msg.data.data;
     if (!Array.isArray(data) && Array.isArray(msg?.data?.rooms)) data = msg.data.rooms;
-    if (!Array.isArray(data) && Array.isArray(msg?.Global)) data = msg.Global;
-    if (!Array.isArray(data) && Array.isArray(msg?.global)) data = msg.global;
     if (!Array.isArray(data)) return [];
-    const seen = new Set();
-    const out = [];
+    const seen = new Set(), out = [];
     for (const r of data) {
       const roomid = Number(r?.roomid ?? r?.id ?? r?.roomId ?? 0);
       const name = String(r?.name ?? r?.room ?? r?.roomname ?? '').trim();
@@ -734,12 +348,7 @@
   function extractUsers(msg) {
     const arr = msg.users || msg.data?.users || msg.data || [];
     if (!Array.isArray(arr)) return [];
-    return arr.map(u => ({
-      userid: Number(u.userid ?? u.userId ?? u.UserID ?? 0),
-      username: String(u.username ?? u.Username ?? ''),
-      avatar: u.avatar || u.Avatar || '',
-      role: u.role || u.userRole || '',
-    })).filter(Boolean);
+    return arr.map(u => ({ userid:Number(u.userid ?? u.userId ?? u.UserID ?? 0), username:String(u.username ?? u.Username ?? ''), avatar:u.avatar || u.Avatar || '', role:u.role || u.userRole || '' })).filter(Boolean);
   }
 
   function normalizeMessage(msg) {
@@ -747,245 +356,142 @@
     const url = msg.url ?? '';
     const avatar = msg.avatar || msg.Avatar || '';
     const media = url || (String(text).match(IMAGE_RE)?.[1] || '');
-    return {
-      username: msg.username || msg.Username || 'Unknown',
-      userid: msg.userid ?? msg.UserID ?? msg.userId ?? 0,
-      avatar,
-      text,
-      url,
-      media,
-      type: msg.type || 'text',
-      secret: !!msg.secret,
-      mine: String(msg.username || msg.Username || '').toLowerCase() === String(state.myName || '').toLowerCase(),
-      ts: new Date(),
-    };
+    return { username: msg.username || msg.Username || 'Unknown', userid: msg.userid ?? msg.UserID ?? msg.userId ?? 0, avatar, text, url, media, type: msg.type || 'text', secret: !!msg.secret, mine: String(msg.username || msg.Username || '').toLowerCase() === String(state.myName || '').toLowerCase(), ts: new Date() };
   }
 
-  function ensureRoom(rid, name) {
-    if (!state.rooms.has(rid)) state.rooms.set(rid, { roomid: rid, name, messages: [], users: [], unread: 0 });
-  }
+  function ensureRoom(rid, name) { if (!state.rooms.has(rid)) state.rooms.set(rid, { roomid:rid, name, messages:[], users:[], unread:0 }); }
+  function roomNameById(rid) { return state.roomList.find(r => Number(r.roomid) === Number(rid))?.name || state.rooms.get(rid)?.name || ''; }
 
-  function roomNameById(rid) {
-    return state.roomList.find(r => Number(r.roomid) === Number(rid))?.name || state.rooms.get(rid)?.name || '';
-  }
-
-  function updateRoomHero() {
-    const room = currentRoom();
-    if (!room) {
-      els.roomHeroName.textContent = 'No room selected';
-      els.roomHeroMeta.textContent = state.loggedIn ? 'Use + to add a room, or join by room name/ID' : 'Log in, then join a room';
-      return;
-    }
-    els.roomHeroName.textContent = room.name;
-    els.roomHeroMeta.textContent = `Room ID ${room.roomid} • ${room.users?.length || 0} users • ${room.messages.length} messages`;
-  }
-
-  function activateRoom(rid) {
+  function activateRoom(rid, openChat = false) {
     state.activeRoomId = rid;
-    showUsersOverlay(false);
     const room = currentRoom();
     if (room) room.unread = 0;
-    renderRooms();
-    renderTabs();
-    renderMessages();
-    renderUsers();
-    renderUsersOverlay();
-    updateRoomHero();
+    renderJoinedRooms(); renderTabs(); renderMessages(); renderUsers(); updateChatHeader();
+    if (openChat) showScreen('chatScreen');
   }
 
   function removeRoom(rid) {
     state.rooms.delete(rid);
-    if (state.activeRoomId === rid) {
-      state.activeRoomId = [...state.rooms.keys()][0] || null;
-    }
-    renderRooms();
-    renderTabs();
-    renderMessages();
-    renderUsers();
-    renderUsersOverlay();
-    updateRoomHero();
-    if (state.activeRoomId) setStatus('ready', roomNameById(state.activeRoomId) || ('Room ' + state.activeRoomId));
-    else setStatus(state.connected ? 'connected' : 'offline', state.connected ? 'Connected' : 'Offline');
+    if (state.activeRoomId === rid) state.activeRoomId = [...state.rooms.keys()][0] || null;
+    renderJoinedRooms(); renderTabs(); renderMessages(); renderUsers(); updateChatHeader();
+    if (!state.activeRoomId) showScreen('lobbyScreen');
   }
 
   function avatarNode(url) {
     if (!url) {
-      const fallback = document.createElement('div');
-      fallback.className = 'avatar-fallback';
-      fallback.textContent = '👤';
-      return fallback;
+      const fallback = document.createElement('div'); fallback.className = 'avatar-fallback'; fallback.textContent = '👤'; return fallback;
     }
-    const isGif = /\.gif(\?|$)/i.test(url);
-    const img = document.createElement('img');
-    img.className = isGif ? 'avatar-gif' : 'avatar';
-    img.src = url;
-    img.loading = 'lazy';
-    img.onerror = () => {
-      img.replaceWith(Object.assign(document.createElement('div'), { className: 'avatar-fallback', textContent: '👤' }));
-    };
-    return img;
+    const img = document.createElement('img'); img.className = /\.gif(\?|$)/i.test(url) ? 'avatar-gif' : 'avatar'; img.src = url; img.loading='lazy'; img.onerror = () => img.replaceWith(Object.assign(document.createElement('div'), { className:'avatar-fallback', textContent:'👤' })); return img;
   }
 
   function mediaNode(url) {
     if (!url) return null;
-    const lower = url.toLowerCase();
-    if (/\.(gif|png|jpg|jpeg|webp|bmp)(\?|$)/i.test(lower)) {
-      const img = document.createElement('img');
-      img.className = /\.gif(\?|$)/i.test(lower) ? 'gif-media' : 'media';
-      img.src = url;
-      img.loading = 'lazy';
-      img.alt = 'media';
-      return img;
+    if (/\.(gif|png|jpg|jpeg|webp|bmp)(\?|$)/i.test(url)) {
+      const img = document.createElement('img'); img.className = /\.gif(\?|$)/i.test(url) ? 'gif-media' : 'media'; img.src = url; img.loading='lazy'; return img;
     }
-    const a = document.createElement('a');
-    a.href = url;
-    a.target = '_blank';
-    a.rel = 'noopener';
-    a.textContent = url;
-    return a;
+    const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = url; return a;
   }
 
-  function renderTabs() {
+  function renderJoinedRooms() {
     const items = [...state.rooms.values()];
-    els.tabs.innerHTML = items.length ? '' : '<div class="tab active">No room yet</div>';
+    els.joinedRooms.innerHTML = items.length ? '' : '<div class="muted" style="font-size:12px">No rooms joined yet.</div>';
     for (const r of items) {
       const el = document.createElement('button');
-      el.className = 'tab' + (state.activeRoomId === r.roomid ? ' active' : '');
+      el.className = 'room-chip';
       el.innerHTML = `<span>${escapeHtml(r.name)}</span>${r.unread ? `<span class="badge">${r.unread}</span>` : ''}`;
-      el.onclick = () => activateRoom(r.roomid);
-      els.tabs.appendChild(el);
-    }
-  }
-
-  function roomItemMarkup(r) {
-    return `<div class="room-top"><div class="room-name">${escapeHtml(r.name)}</div>${r.unread ? `<span class="badge">${r.unread}</span>` : `<span class="pill-mini">ID ${r.roomid}</span>`}</div><div class="meta">Room ${r.roomid}</div>`;
-  }
-
-  function renderRooms() {
-    const items = [...state.rooms.values()];
-    const targets = [els.joinedRooms, els.joinedRoomsDesk];
-    for (const target of targets) {
-      target.innerHTML = items.length ? '' : '<div class="mini-hint">No rooms joined yet.</div>';
-      for (const r of items) {
-        const el = document.createElement('div');
-        el.className = 'room-item' + (state.activeRoomId === r.roomid ? ' active' : '');
-        el.dataset.rid = r.roomid;
-        el.innerHTML = roomItemMarkup(r);
-        el.onclick = () => { activateRoom(r.roomid); if (!isDesktop()) showDrawer(false); };
-        target.appendChild(el);
-      }
+      el.onclick = () => activateRoom(r.roomid, true);
+      els.joinedRooms.appendChild(el);
     }
   }
 
   function renderRoomDirectory() {
-    const qs = [(els.roomSearch.value || '').trim().toLowerCase(), (els.roomSearchDesk.value || '').trim().toLowerCase()];
-    const filteredMobile = state.roomList.filter(r => !qs[0] || r.name.toLowerCase().includes(qs[0]) || String(r.roomid).includes(qs[0])).slice(0, 120);
-    const filteredDesk = state.roomList.filter(r => !qs[1] || r.name.toLowerCase().includes(qs[1]) || String(r.roomid).includes(qs[1])).slice(0, 120);
-    [[els.roomDirectory, filteredMobile],[els.roomDirectoryDesk, filteredDesk]].forEach(([target, arr]) => {
-      target.innerHTML = arr.length ? '' : '<div class="mini-hint">Room list empty.</div>';
-      for (const r of arr) {
-        const el = document.createElement('div');
-        el.className = 'room-item';
-        el.innerHTML = `<div class="room-top"><div class="room-name">${escapeHtml(r.name)}</div><span class="pill-mini">${r.users || 0}</span></div><div class="meta">ID ${r.roomid}</div>`;
-        el.onclick = () => {
-          fillRoomFields(r);
-          joinRoomId(r.roomid);
-          if (!isDesktop()) showDrawer(false);
-        };
-        target.appendChild(el);
-      }
-    });
+    const q = (els.roomSearch.value || '').trim().toLowerCase();
+    const list = state.roomList.filter(r => !q || r.name.toLowerCase().includes(q) || String(r.roomid).includes(q)).slice(0, 200);
+    els.roomDirectory.innerHTML = list.length ? '' : '<div class="muted" style="font-size:12px">Room list is empty.</div>';
+    for (const r of list) {
+      const el = document.createElement('div');
+      el.className = 'room-item';
+      el.innerHTML = `<div class="room-top"><div class="room-name">${escapeHtml(r.name)}</div><div class="meta">${r.users || 0} users</div></div><div class="meta">Room ID ${r.roomid}</div>`;
+      el.onclick = () => { els.roomId.value = r.roomid; els.roomName.value = r.name; joinRoomId(r.roomid); };
+      els.roomDirectory.appendChild(el);
+    }
+  }
+
+  function renderTabs() {
+    const items = [...state.rooms.values()];
+    els.roomTabs.innerHTML = '';
+    for (const r of items) {
+      const el = document.createElement('button');
+      el.className = 'tab' + (state.activeRoomId === r.roomid ? ' active' : '');
+      el.innerHTML = `<span>${escapeHtml(r.name)}</span>${r.unread ? `<span class="badge">${r.unread}</span>` : ''}`;
+      el.onclick = () => activateRoom(r.roomid, true);
+      els.roomTabs.appendChild(el);
+    }
+    if (!items.length) els.roomTabs.innerHTML = '<div class="tab active">No room yet</div>';
   }
 
   function renderUsers() {
     const room = currentRoom();
-    const targets = [els.users, els.usersDesk];
-    for (const target of targets) {
-      target.innerHTML = room && room.users.length ? '' : '<div class="mini-hint">Current room users yahan aayenge.</div>';
-      if (!room) continue;
-      for (const u of room.users) {
-        const el = document.createElement('div');
-        el.className = 'user-item';
-        el.innerHTML = `<div class="room-top"><div class="room-name">${escapeHtml(u.username || 'Unknown')}</div><span class="pill-mini">${escapeHtml(u.role || '') || 'user'}</span></div><div class="meta">${escapeHtml(u.userid)}</div>`;
-        el.ondblclick = () => useUserTarget(u);
-        el.onclick = () => useUserTarget(u, false);
-        target.appendChild(el);
-      }
-    }
-  }
-
-
-  function renderUsersOverlay() {
-    const room = currentRoom();
-    els.usersOverlayTitle.textContent = room ? `${room.name} users` : 'Room users';
-    els.usersOverlayMeta.textContent = room ? `Room ID ${room.roomid} • ${room.users?.length || 0} users` : 'No room selected';
-    els.usersOverlayList.innerHTML = room && room.users.length ? '' : '<div class="mini-hint">Users in this room yahan dikhेंगे. Refresh dabao.</div>';
+    els.usersTitle.textContent = room ? `${room.name} users` : 'Room users';
+    els.usersMeta.textContent = room ? `Room ID ${room.roomid} • ${room.users?.length || 0} users` : 'No room selected';
+    els.usersList.innerHTML = room && room.users.length ? '' : '<div class="muted" style="font-size:12px">No users loaded yet.</div>';
     if (!room) return;
     for (const u of room.users) {
       const el = document.createElement('div');
       el.className = 'user-item';
-      el.innerHTML = `<div class="room-top"><div class="room-name">${escapeHtml(u.username || 'Unknown')}</div><span class="pill-mini">${escapeHtml(u.role || '') || 'user'}</span></div><div class="meta">${escapeHtml(u.userid)}</div>`;
-      el.ondblclick = () => { useUserTarget(u); showUsersOverlay(false); };
+      el.innerHTML = `<div class="room-top"><div class="room-name">${escapeHtml(u.username || 'Unknown')}</div><div class="meta">${escapeHtml(u.role || 'user')}</div></div><div class="meta">${escapeHtml(u.userid)}</div>`;
       el.onclick = () => useUserTarget(u, false);
-      els.usersOverlayList.appendChild(el);
+      el.ondblclick = () => { useUserTarget(u, true); showUsers(false); };
+      els.usersList.appendChild(el);
     }
   }
 
   function renderMessages() {
     const room = currentRoom();
-    els.messages.innerHTML = '';
-    if (!room) {
-      els.messages.innerHTML = '<div class="empty-state">Log in, then use + to add a room and start chatting.</div>';
-      updateRoomHero();
-      return;
-    }
+    els.messages.innerHTML = room ? '' : '<div class="empty">Open a room from the room list.</div>';
+    if (!room) return;
     if (!room.messages.length) {
-      els.messages.innerHTML = `<div class="empty-state">${escapeHtml(room.name)} opened. Live chat will appear here.</div>`;
-      updateRoomHero();
+      els.messages.innerHTML = `<div class="empty">${escapeHtml(room.name)} is open. Messages will appear here.</div>`;
       return;
     }
-    room.messages.forEach((m, idx) => {
-      const wrap = document.createElement('div');
-      wrap.className = 'msg' + (m.mine ? ' mine' : '');
-      const aw = document.createElement('div'); aw.className = 'avatar-wrap'; aw.appendChild(avatarNode(m.avatar));
-      wrap.appendChild(aw);
+    room.messages.forEach(m => {
+      const wrap = document.createElement('div'); wrap.className = 'msg' + (m.mine ? ' mine' : '');
+      const av = document.createElement('div'); av.className = 'avatar-wrap'; av.appendChild(avatarNode(m.avatar)); wrap.appendChild(av);
       const main = document.createElement('div'); main.className = 'msg-main';
       const head = document.createElement('div'); head.className = 'msg-head';
       head.innerHTML = `<span class="uname">${escapeHtml(m.username)}</span><button class="uid-chip" data-uid="${escapeHtml(m.userid)}">${escapeHtml(m.userid)}</button><span class="meta-chip">${escapeHtml(m.type)}${m.secret ? ' • secret' : ''}</span><span class="meta-chip">${m.ts.toLocaleTimeString()}</span>`;
       main.appendChild(head);
-      const txt = document.createElement('div'); txt.className = 'msg-text'; txt.innerHTML = linkify(escapeHtml(m.text || ''));
-      main.appendChild(txt);
-      const media = mediaNode(m.media);
-      if (media) main.appendChild(media);
+      const txt = document.createElement('div'); txt.className = 'msg-text'; txt.innerHTML = linkify(escapeHtml(m.text || '')); main.appendChild(txt);
+      const media = mediaNode(m.media); if (media) main.appendChild(media);
       const actions = document.createElement('div'); actions.className = 'msg-actions';
-      const secretBtn = document.createElement('button');
-      secretBtn.className = 'small-btn';
-      secretBtn.textContent = 'Send this as secret';
-      secretBtn.onclick = () => quickSecretFromMessage(m);
-      const useIdBtn = document.createElement('button');
-      useIdBtn.className = 'small-btn'; useIdBtn.textContent = 'Use this ID';
-      useIdBtn.onclick = () => useUserTarget({ userid: m.userid, username: m.username }, true);
-      actions.append(secretBtn, useIdBtn);
-      main.appendChild(actions);
+      const secretBtn = document.createElement('button'); secretBtn.className = 'small-btn'; secretBtn.textContent = 'Send this as secret'; secretBtn.onclick = () => quickSecretFromMessage(m);
+      const useBtn = document.createElement('button'); useBtn.className = 'small-btn'; useBtn.textContent = 'Use this ID'; useBtn.onclick = () => useUserTarget({ userid: m.userid, username: m.username }, true);
+      actions.append(secretBtn, useBtn); main.appendChild(actions);
       wrap.appendChild(main);
-      wrap.querySelector('.uid-chip').onclick = (e) => { e.stopPropagation(); handleUidTap(m); };
+      wrap.querySelector('.uid-chip').onclick = e => { e.stopPropagation(); handleUidTap(m); };
       wrap.ondblclick = () => useUserTarget({ userid: m.userid, username: m.username }, true);
       els.messages.appendChild(wrap);
     });
     els.messages.scrollTop = els.messages.scrollHeight;
-    updateRoomHero();
+    updateChatHeader();
+  }
+
+  function updateChatHeader() {
+    const room = currentRoom();
+    if (!room) {
+      els.chatRoomTitle.textContent = 'No room selected';
+      els.chatRoomMeta.textContent = 'Go back and open a room from the room list';
+      return;
+    }
+    els.chatRoomTitle.textContent = room.name;
+    els.chatRoomMeta.textContent = `Room ID ${room.roomid} • ${room.users?.length || 0} users • ${room.messages.length} messages`;
   }
 
   function handleUidTap(m) {
-    clearTimeout(state.touchTimer);
-    if (state._lastUid === m.userid && Date.now() - (state._lastUidAt || 0) < 350) {
-      useUserTarget({ userid: m.userid, username: m.username }, true);
-      state._lastUid = null;
-      return;
+    if (state.lastUid === m.userid && Date.now() - state.lastUidAt < 350) {
+      useUserTarget({ userid:m.userid, username:m.username }, true); state.lastUid = null; return;
     }
-    state._lastUid = m.userid;
-    state._lastUidAt = Date.now();
-    state.touchTimer = setTimeout(() => { state._lastUid = null; }, 360);
+    state.lastUid = m.userid; state.lastUidAt = Date.now();
   }
 
   function useUserTarget(u, switchSecret = true) {
@@ -996,13 +502,9 @@
   }
 
   function quickSecretFromMessage(m) {
-    useUserTarget({ userid: m.userid, username: m.username }, true);
-    if ((els.messageInput.value || '') !== '') {
-      sendMessage();
-    } else {
-      els.messageInput.focus();
-      setStatus('ready', `Secret target: ${m.username} (${m.userid})`);
-    }
+    useUserTarget({ userid:m.userid, username:m.username }, true);
+    if ((els.messageInput.value || '') !== '') sendMessage();
+    else els.messageInput.focus();
   }
 
   function ensureRoomListFresh(cb) {
@@ -1010,61 +512,27 @@
     if (fresh) return cb?.();
     refreshRoomList(true);
     let tries = 0;
-    const timer = setInterval(() => {
+    const t = setInterval(() => {
       tries += 1;
-      if (state.roomList.length) { clearInterval(timer); cb?.(); return; }
-      if (tries >= 6) { clearInterval(timer); cb?.(); }
+      if (state.roomList.length || tries >= 6) { clearInterval(t); cb?.(); }
     }, 350);
   }
 
   function refreshRoomList(silent = false) {
-    if (!state.connected) {
-      if (!silent) alert('Please log in or connect first.');
-      return;
-    }
-    wsSend({ handler: 'getchatrooms', admin: String(state.username || state.myName || '') });
+    if (!state.connected) { if (!silent) alert('Please log in first.'); return; }
+    wsSend({ handler:'getchatrooms', admin:String(state.username || state.myName || '') });
   }
+  function startRoomAutoRefresh() { stopRoomAutoRefresh(); state.roomTimer = setInterval(() => state.connected && refreshRoomList(true), 25000); }
+  function stopRoomAutoRefresh() { if (state.roomTimer) clearInterval(state.roomTimer); state.roomTimer = null; }
 
-  function startRoomAutoRefresh() {
-    stopRoomAutoRefresh();
-    state.roomTimer = setInterval(() => {
-      if (state.connected) refreshRoomList();
-    }, 25000);
-  }
-
-  function stopRoomAutoRefresh() {
-    if (state.roomTimer) clearInterval(state.roomTimer);
-    state.roomTimer = null;
-  }
-
-  function fillRoomFields(r) {
-    els.roomId.value = r.roomid;
-    els.roomName.value = r.name;
-    els.roomIdDesk.value = r.roomid;
-    els.roomNameDesk.value = r.name;
-  }
-
-  function joinRoomId(rid) {
-    rid = Number(rid || 0);
-    if (!rid) return;
-    ensureRoom(rid, roomNameById(rid) || `Room ${rid}`);
-    wsSend({ handler: 'joinchatroom', roomid: rid });
-  }
-
+  function joinRoomId(rid) { rid = Number(rid || 0); if (!rid) return; ensureRoom(rid, roomNameById(rid) || `Room ${rid}`); wsSend({ handler:'joinchatroom', roomid:rid }); }
   function joinById() {
-    const rid = Number((els.roomId.value || els.roomIdDesk.value || '').trim());
+    const rid = Number((els.roomId.value || '').trim());
     if (!rid) return alert('Please enter a valid room ID.');
-    fillRoomFields({ roomid: rid, name: roomNameById(rid) || `Room ${rid}` });
     joinRoomId(rid);
   }
-
-  function normalizeRoomName(x) {
-    return String(x || '').toLowerCase().replace(/\s+/g, ' ').trim();
-  }
-
   function joinByName() {
-    const raw = (els.roomName.value || els.roomNameDesk.value || '').trim();
-    const q = normalizeRoomName(raw);
+    const q = normalizeRoomName((els.roomName.value || '').trim());
     if (!q) return alert('Please enter a room name.');
     ensureRoomListFresh(() => {
       const exact = state.roomList.find(r => normalizeRoomName(r.name) === q);
@@ -1072,158 +540,68 @@
       const includes = state.roomList.find(r => normalizeRoomName(r.name).includes(q));
       const found = exact || starts || includes;
       if (!found) return alert('Room not found. Refresh the room list and try again.');
-      fillRoomFields(found);
-      joinRoomId(found.roomid);
+      els.roomId.value = found.roomid; els.roomName.value = found.name; joinRoomId(found.roomid);
     });
   }
 
-  function refreshUsers() {
-    if (!state.activeRoomId) return;
-    wsSend({ handler: 'getusers', roomid: state.activeRoomId });
-  }
-
-  function leaveCurrentRoom() {
-    const rid = state.activeRoomId;
-    if (!rid) return;
-    wsSend({ handler: 'leavechatroom', roomid: rid });
-    removeRoom(rid);
-  }
-
-  function setMode(mode) {
-    state.sendMode = mode;
-    [[els.modeNormal,'normal'], [els.modeSecret,'secret'], [els.modePm,'pm']].forEach(([el, m]) => el.classList.toggle('active', m === mode));
-  }
+  function refreshUsers() { if (!state.activeRoomId) return; wsSend({ handler:'getusers', roomid:state.activeRoomId }); }
+  function leaveCurrentRoom() { const rid = state.activeRoomId; if (!rid) return; wsSend({ handler:'leavechatroom', roomid:rid }); removeRoom(rid); }
+  function setMode(mode) { state.sendMode = mode; [[els.modeNormal,'normal'],[els.modeSecret,'secret'],[els.modePm,'pm']].forEach(([el,m]) => el.classList.toggle('active', m === mode)); }
 
   function selfEcho({ roomid, text, type, secret = false, userid = state.username }) {
     ensureRoom(roomid, roomNameById(roomid) || (roomid === -1 ? 'PM' : `Room ${roomid}`));
     const room = state.rooms.get(roomid);
-    room.messages.push({
-      username: state.username,
-      userid,
-      avatar: '',
-      text,
-      url: '',
-      media: (String(text).match(IMAGE_RE)?.[1] || ''),
-      type,
-      secret,
-      mine: true,
-      ts: new Date(),
-    });
+    room.messages.push({ username:state.username, userid, avatar:'', text, url:'', media:(String(text).match(IMAGE_RE)?.[1] || ''), type, secret, mine:true, ts:new Date() });
     if (state.activeRoomId !== roomid) room.unread = (room.unread || 0) + 1;
-    renderRooms(); renderTabs(); if (state.activeRoomId === roomid) renderMessages();
+    renderJoinedRooms(); renderTabs(); if (state.activeRoomId === roomid) renderMessages();
   }
-
-  function ensurePmRoom() {
-    const rid = -1;
-    ensureRoom(rid, 'PM');
-    activateRoom(rid);
-    return rid;
-  }
+  function ensurePmRoom() { const rid = -1; ensureRoom(rid,'PM'); activateRoom(rid,true); return rid; }
 
   function sendMessage() {
     const text = els.messageInput.value;
     const rid = state.activeRoomId;
     if (!state.connected) return alert('Please log in first.');
     if (!rid && state.sendMode !== 'pm') return alert('Please join a room first.');
-
     let ok = false;
-    if (state.sendMode === 'normal') {
-      ok = wsSend({ handler: 'chatroommessage', roomid: rid, text, type: 'text' });
-    } else if (state.sendMode === 'secret') {
+    if (state.sendMode === 'normal') ok = wsSend({ handler:'chatroommessage', roomid:rid, text, type:'text' });
+    else if (state.sendMode === 'secret') {
       const uid = Number((els.targetUserId.value || '').trim() || 0);
       if (!uid) return alert('Please enter a target user ID for secret mode.');
-      ok = wsSend({ handler: 'chatroommessage', roomid: rid, userid: uid, secret: true, text, type: 'text' });
-      if (ok) selfEcho({ roomid: rid, text, type: 'text', secret: true, userid: `${state.username} → ${uid}` });
+      ok = wsSend({ handler:'chatroommessage', roomid:rid, userid:uid, secret:true, text, type:'text' });
+      if (ok) selfEcho({ roomid:rid, text, type:'text', secret:true, userid:`${state.username} → ${uid}` });
     } else {
-      const to = (els.pmUser.value || '').trim();
-      const uid = Number((els.pmUserId.value || '').trim() || 0);
+      const to = (els.pmUser.value || '').trim(); const uid = Number((els.pmUserId.value || '').trim() || 0);
       if (!to || !uid) return alert('Please enter both PM username and user ID.');
-      ok = wsSend({ handler: 'message', to, userid: uid, text, type: 'text' });
-      if (ok) selfEcho({ roomid: rid || ensurePmRoom(), text, type: 'pm', userid: uid });
+      ok = wsSend({ handler:'message', to, userid:uid, text, type:'text' });
+      if (ok) selfEcho({ roomid:rid || ensurePmRoom(), text, type:'pm', userid:uid });
     }
-    if (ok) {
-      els.messageInput.value = '';
-      autoGrowTextarea();
-    }
+    if (ok) { els.messageInput.value = ''; autoGrowTextarea(); }
   }
 
-  function findNext() {
-    const room = currentRoom();
-    const q = (els.searchInput.value || '').trim().toLowerCase();
-    if (!room || !q) return;
-    const nodes = [...els.messages.children];
-    nodes.forEach(n => n.classList.remove('search-hit'));
-    for (let i = state.searchIndex + 1; i < room.messages.length; i++) {
-      const m = room.messages[i];
-      if (`${m.username} ${m.userid} ${m.text} ${m.url}`.toLowerCase().includes(q)) {
-        state.searchIndex = i;
-        const node = nodes[i];
-        if (node) {
-          node.classList.add('search-hit');
-          node.scrollIntoView({ block: 'center', behavior: 'smooth' });
-        }
-        return;
-      }
-    }
-    state.searchIndex = -1;
-  }
+  function autoGrowTextarea() { const t = els.messageInput; t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 140) + 'px'; }
+  function showUsers(show) { els.usersSheet.classList.toggle('show', !!show); if (show) renderUsers(); }
 
-  function autoGrowTextarea() {
-    const t = els.messageInput;
-    t.style.height = 'auto';
-    t.style.height = Math.min(t.scrollHeight, 180) + 'px';
-  }
-
-  function updateDesktopVisibility() {
-    const desktop = isDesktop();
-    els.leftPane.classList.toggle('hidden', !desktop);
-    els.rightPane.classList.toggle('hidden', !desktop);
-    els.menuBtn.classList.toggle('hidden', desktop);
-    if (desktop) showDrawer(false);
-  }
-
-  // events
-  els.loginBtn.onclick = () => { syncLoginFields(false); connectAndLogin(); };
-  els.loginBtnDesk.onclick = () => { syncLoginFields(true); connectAndLogin(); };
+  els.loginBtn.onclick = connectAndLogin;
   els.disconnectBtn.onclick = () => state.ws?.close();
-  els.disconnectBtnDesk.onclick = () => state.ws?.close();
-  els.menuBtn.onclick = () => showDrawer(true);
-  els.plusBtn.onclick = () => showDrawer(true);
-  els.closeDrawer.onclick = () => showDrawer(false);
-  els.backdrop.onclick = () => showDrawer(false);
-  els.joinByIdBtn.onclick = joinById; els.joinByIdDesk.onclick = joinById;
-  els.joinByNameBtn.onclick = joinByName; els.joinByNameDesk.onclick = joinByName;
-  els.refreshRoomsBtn.onclick = refreshRoomList; els.refreshRoomsDesk.onclick = refreshRoomList; els.refreshRoomsMini.onclick = refreshRoomList;
-  els.refreshUsersTop.onclick = () => { refreshUsers(); showUsersOverlay(true); };
-  els.openUsersMini.onclick = () => { refreshUsers(); showUsersOverlay(true); };
-  els.closeUsersOverlay.onclick = () => showUsersOverlay(false);
-  els.refreshUsersOverlay.onclick = refreshUsers;
-  els.leaveBtnTop.onclick = leaveCurrentRoom;
+  els.refreshRoomsBtn.onclick = () => refreshRoomList();
+  els.joinByIdBtn.onclick = joinById;
+  els.joinByNameBtn.onclick = joinByName;
+  els.roomSearch.addEventListener('input', renderRoomDirectory);
+  els.backToLobbyBtn.onclick = () => showScreen('lobbyScreen');
+  els.addRoomBtn.onclick = () => showScreen('lobbyScreen');
+  els.usersBtn.onclick = () => { refreshUsers(); showUsers(true); };
+  els.closeUsersBtn.onclick = () => showUsers(false);
+  els.usersSheet.addEventListener('click', e => { if (e.target === els.usersSheet) showUsers(false); });
+  els.refreshUsersBtn.onclick = refreshUsers;
+  els.leaveBtn.onclick = leaveCurrentRoom;
   els.modeNormal.onclick = () => setMode('normal');
   els.modeSecret.onclick = () => setMode('secret');
   els.modePm.onclick = () => setMode('pm');
   els.sendBtn.onclick = sendMessage;
-  els.searchBtn.onclick = findNext;
   els.messageInput.addEventListener('input', autoGrowTextarea);
-  els.messageInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  });
-  els.roomSearch.addEventListener('input', renderRoomDirectory);
-  els.roomSearchDesk.addEventListener('input', renderRoomDirectory);
-  window.addEventListener('resize', updateDesktopVisibility);
+  els.messageInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
 
-  updateDesktopVisibility();
-  updateChatFullMode();
-  renderTabs();
-  renderRooms();
-  renderRoomDirectory();
-  renderUsers();
-  renderMessages();
-  updateRoomHero();
-  autoGrowTextarea();
+  renderJoinedRooms(); renderRoomDirectory(); renderTabs(); renderMessages(); renderUsers(); updateChatHeader(); autoGrowTextarea();
 })();
 </script>
 </body>
