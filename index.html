@@ -122,8 +122,8 @@
   .messages {
     min-height: 0;
     overflow-y: auto;
-    padding: 12px 12px 110px;
-    display: flex; flex-direction: column; gap: 10px;
+    padding: 8px 10px 18px;
+    display: flex; flex-direction: column; gap: 8px;
     -webkit-overflow-scrolling: touch;
   }
   .empty-state {
@@ -159,35 +159,41 @@
   .msg-actions {
     display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;
   }
-  .small-btn { padding: 8px 10px; font-size: 12px; }
+  .small-btn { padding: 7px 9px; font-size: 11px; }
 
   .composer {
     position: sticky;
     bottom: 0;
-    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-    background: linear-gradient(180deg, rgba(11,15,20,.2) 0%, rgba(11,15,20,.92) 16%, rgba(11,15,20,.98) 100%);
+    min-height: 20svh;
+    max-height: 20svh;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, rgba(11,15,20,.15) 0%, rgba(11,15,20,.94) 12%, rgba(11,15,20,.99) 100%);
     backdrop-filter: blur(16px);
     border-top: 1px solid var(--line);
     z-index: 15;
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    gap: 5px;
   }
-  .mode-strip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; }
+  .mode-strip { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
   .mode-strip::-webkit-scrollbar { display: none; }
-  .chip { padding: 10px 12px; white-space: nowrap; }
+  .chip { padding: 6px 8px; white-space: nowrap; font-size: 12px; min-height: 30px; border-radius: 12px; }
   .chip.active { background: linear-gradient(180deg, #24416c 0%, #1c3355 100%); border-color: #355883; }
-  .target-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .target-row { display: flex; gap: 5px; margin-bottom: 0; }
   .target-row > * { flex: 1; min-width: 0; }
   textarea.field {
-    min-height: 62px; max-height: 180px; resize: none;
-    padding-right: 58px;
+    min-height: 44px; max-height: 72px; resize: none;
+    padding: 10px 46px 10px 12px;
+    line-height: 1.25;
   }
   .compose-wrap { position: relative; }
   .send-btn {
-    position: absolute; right: 8px; bottom: 8px; width: 42px; height: 42px;
+    position: absolute; right: 6px; bottom: 6px; width: 32px; height: 32px;
     display: grid; place-items: center; font-size: 18px;
     background: linear-gradient(180deg, #366ae6 0%, #2955be 100%);
     border-color: #36538d; color: white;
   }
-  .compose-tools { display: flex; gap: 8px; margin-top: 8px; }
+  .compose-tools { display: flex; gap: 6px; margin-top: 0; }
   .compose-tools > * { flex: 1; }
 
   .drawer-backdrop {
@@ -234,6 +240,30 @@
     .desktop-scroll { min-height: 0; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
     .topbar { padding-top: 12px; }
   }
+
+  .chat-full .login-card, .chat-full .tabs-wrap { display: none; }
+  .chat-full .app { grid-template-rows: auto minmax(0, 1fr) 20svh; }
+  .chat-full .chat-area { grid-row: 2; min-height: 0; }
+  .chat-full .composer { grid-row: 3; }
+  .chat-full .topbar { padding: env(safe-area-inset-top) 8px 6px; }
+  .chat-full .topbar-row { gap: 6px; }
+  .chat-full .icon-btn { width: 34px; height: 34px; font-size: 18px; border-radius: 12px; }
+  .chat-full .app-title { font-size: 15px; }
+  .chat-full #leaveBtnTop, .chat-full #refreshUsersTop { padding: 7px 9px !important; font-size: 12px; }
+  .chat-full .status-pill { padding: 7px 10px; font-size: 12px; }
+  .chat-full .tabs { padding: 6px 8px; gap: 6px; }
+  .chat-full .tab { padding: 7px 10px; min-height: 32px; font-size: 12px; }
+  .chat-full .field { padding: 8px 10px; border-radius: 12px; font-size: 13px; }
+  .users-overlay {
+    position: fixed; inset: 0; z-index: 60; background: rgba(11,15,20,.98);
+    transform: translateX(100%); transition: .22s ease; display: flex; flex-direction: column;
+    pointer-events: none;
+  }
+  .users-overlay.show { transform: translateX(0); pointer-events: auto; }
+  .users-head { padding: calc(12px + env(safe-area-inset-top)) 12px 12px; border-bottom: 1px solid var(--line); display:flex; align-items:center; gap:8px; background:#101721; }
+  .users-body { min-height:0; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:8px; }
+  .users-title { font-weight:800; }
+
 </style>
 </head>
 <body>
@@ -303,7 +333,7 @@
       <button id="disconnectBtn" class="btn-secondary">Disconnect</button>
     </div>
     <div style="height:8px"></div>
-    <div class="mini-hint">Single-file HTML. Room list server se <b>getchatrooms + admin=username</b> se load hogi, external file se nahi.</div>
+    <div class="mini-hint">Single-file HTML. The room list loads directly from the server using <b>getchatrooms + admin=username</b>, with no external file.</div>
   </div>
 
   <div class="tabs-wrap">
@@ -311,7 +341,7 @@
   </div>
 
   <main class="chat-area">
-    <div id="roomHero" style="padding:10px 12px;border-bottom:1px solid var(--line);background:rgba(12,18,26,.82);backdrop-filter:blur(10px)"><div style="font-weight:800;font-size:16px" id="roomHeroName">No room selected</div><div style="color:var(--muted);font-size:12px;margin-top:2px" id="roomHeroMeta">Login karo, phir room join karo</div></div>
+    <div id="roomHero" style="padding:6px 10px;border-bottom:1px solid var(--line);background:rgba(12,18,26,.82);backdrop-filter:blur(10px)"><div style="font-weight:800;font-size:14px" id="roomHeroName">No room selected</div><div style="color:var(--muted);font-size:11px;margin-top:1px" id="roomHeroMeta">Log in, then join a room</div></div>
     <div id="messages" class="messages"></div>
   </main>
 
@@ -329,7 +359,7 @@
       <input id="pmUserId" class="field" placeholder="PM UserID" />
     </div>
     <div class="compose-wrap">
-      <textarea id="messageInput" class="field" placeholder="Message type karo… Enter = send, Shift+Enter = new line"></textarea>
+      <textarea id="messageInput" class="field" placeholder="Type a message… Enter = send, Shift+Enter = new line"></textarea>
       <button id="sendBtn" class="send-btn">➤</button>
     </div>
     <div class="compose-tools">
@@ -369,7 +399,7 @@
       </div>
       <div style="height:8px"></div>
       <button id="refreshRoomsBtn" class="btn-secondary">Refresh room list</button>
-      <div id="roomsHint" class="mini-hint" style="margin-top:8px">Login ke baad room list auto refresh hogi.</div>
+      <div id="roomsHint" class="mini-hint" style="margin-top:8px">The room list refreshes automatically after login.</div>
     </div>
 
     <div class="card">
@@ -390,6 +420,20 @@
     </div>
   </div>
 </aside>
+
+
+<div id="usersOverlay" class="users-overlay">
+  <div class="users-head">
+    <button id="closeUsersOverlay" class="icon-btn" style="width:38px;height:38px;font-size:18px">←</button>
+    <div>
+      <div id="usersOverlayTitle" class="users-title">Room users</div>
+      <div id="usersOverlayMeta" class="meta">Current room</div>
+    </div>
+    <div class="grow"></div>
+    <button id="refreshUsersOverlay" class="btn-secondary" style="width:auto;padding:8px 10px">Refresh</button>
+  </div>
+  <div id="usersOverlayList" class="users-body"></div>
+</div>
 
 <script>
 (() => {
@@ -437,6 +481,7 @@
     leaveBtnTop: $('leaveBtnTop'), refreshUsersTop: $('refreshUsersTop'),
     backdrop: $('backdrop'), drawer: $('drawer'), closeDrawer: $('closeDrawer'),
     leftPane: $('leftPane'), rightPane: $('rightPane'),
+    usersOverlay: $('usersOverlay'), closeUsersOverlay: $('closeUsersOverlay'), usersOverlayTitle: $('usersOverlayTitle'), usersOverlayMeta: $('usersOverlayMeta'), usersOverlayList: $('usersOverlayList'), refreshUsersOverlay: $('refreshUsersOverlay'),
   };
 
   function syncLoginFields(fromDesk = false) {
@@ -466,6 +511,16 @@
     state.drawerOpen = show;
     els.drawer.classList.toggle('show', show);
     els.backdrop.classList.toggle('show', show);
+  }
+
+  function updateChatFullMode() {
+    const full = !!state.loggedIn;
+    document.body.classList.toggle('chat-full', full);
+  }
+
+  function showUsersOverlay(show) {
+    els.usersOverlay.classList.toggle('show', !!show);
+    if (show) renderUsersOverlay();
   }
 
   function currentRoom() {
@@ -527,6 +582,7 @@
       state.loggedIn = false;
       state.loginSent = false;
       stopRoomAutoRefresh();
+      updateChatFullMode();
       setStatus('offline', 'Disconnected');
     };
   }
@@ -552,6 +608,7 @@
 
     if (!state.loggedIn && (msg.status === 'success' || msg.error === 0) && /login/.test(blob)) {
       state.loggedIn = true;
+      updateChatFullMode();
       setStatus('ready', 'Logged in');
       refreshRoomList(true);
       startRoomAutoRefresh();
@@ -559,6 +616,7 @@
 
     if (['loginnew', 'loginnewsuccess', 'login'].includes(handler) && (/success/.test(blob) || msg.error === 0)) {
       state.loggedIn = true;
+      updateChatFullMode();
       setStatus('ready', 'Logged in');
       refreshRoomList(true);
       startRoomAutoRefresh();
@@ -595,6 +653,7 @@
       if (rid && state.rooms.has(rid)) {
         state.rooms.get(rid).users = users;
         renderUsers();
+        renderUsersOverlay();
         updateRoomHero();
       }
     }
@@ -680,21 +739,23 @@
     const room = currentRoom();
     if (!room) {
       els.roomHeroName.textContent = 'No room selected';
-      els.roomHeroMeta.textContent = state.loggedIn ? '＋ se room add karo ya room name/ID se join karo' : 'Login karo, phir room join karo';
+      els.roomHeroMeta.textContent = state.loggedIn ? 'Use + to add a room, or join by room name/ID' : 'Log in, then join a room';
       return;
     }
     els.roomHeroName.textContent = room.name;
-    els.roomHeroMeta.textContent = `Room ID ${room.roomid} • ${room.users?.length || 0} users • ${room.messages.length} msgs`;
+    els.roomHeroMeta.textContent = `Room ID ${room.roomid} • ${room.users?.length || 0} users • ${room.messages.length} messages`;
   }
 
   function activateRoom(rid) {
     state.activeRoomId = rid;
+    showUsersOverlay(false);
     const room = currentRoom();
     if (room) room.unread = 0;
     renderRooms();
     renderTabs();
     renderMessages();
     renderUsers();
+    renderUsersOverlay();
     updateRoomHero();
   }
 
@@ -707,6 +768,7 @@
     renderTabs();
     renderMessages();
     renderUsers();
+    renderUsersOverlay();
     updateRoomHero();
     if (state.activeRoomId) setStatus('ready', `Ready in ${roomNameById(state.activeRoomId) || ('Room ' + state.activeRoomId)}`);
     else setStatus(state.connected ? 'connected' : 'offline', state.connected ? 'Connected' : 'Offline');
@@ -769,7 +831,7 @@
     const items = [...state.rooms.values()];
     const targets = [els.joinedRooms, els.joinedRoomsDesk];
     for (const target of targets) {
-      target.innerHTML = items.length ? '' : '<div class="mini-hint">Abhi koi room joined nahi hai.</div>';
+      target.innerHTML = items.length ? '' : '<div class="mini-hint">No rooms joined yet.</div>';
       for (const r of items) {
         const el = document.createElement('div');
         el.className = 'room-item' + (state.activeRoomId === r.roomid ? ' active' : '');
@@ -818,16 +880,33 @@
     }
   }
 
+
+  function renderUsersOverlay() {
+    const room = currentRoom();
+    els.usersOverlayTitle.textContent = room ? `${room.name} users` : 'Room users';
+    els.usersOverlayMeta.textContent = room ? `Room ID ${room.roomid} • ${room.users?.length || 0} users` : 'No room selected';
+    els.usersOverlayList.innerHTML = room && room.users.length ? '' : '<div class="mini-hint">Users in this room yahan dikhेंगे. Refresh dabao.</div>';
+    if (!room) return;
+    for (const u of room.users) {
+      const el = document.createElement('div');
+      el.className = 'user-item';
+      el.innerHTML = `<div class="room-top"><div class="room-name">${escapeHtml(u.username || 'Unknown')}</div><span class="pill-mini">${escapeHtml(u.role || '') || 'user'}</span></div><div class="meta">${escapeHtml(u.userid)}</div>`;
+      el.ondblclick = () => { useUserTarget(u); showUsersOverlay(false); };
+      el.onclick = () => useUserTarget(u, false);
+      els.usersOverlayList.appendChild(el);
+    }
+  }
+
   function renderMessages() {
     const room = currentRoom();
     els.messages.innerHTML = '';
     if (!room) {
-      els.messages.innerHTML = '<div class="empty-state">Login karo, phir + se room add karke chat start karo.</div>';
+      els.messages.innerHTML = '<div class="empty-state">Log in, then use + to add a room and start chatting.</div>';
       updateRoomHero();
       return;
     }
     if (!room.messages.length) {
-      els.messages.innerHTML = `<div class="empty-state">${escapeHtml(room.name)} khul gaya. Ab yahan live chat aayegi.</div>`;
+      els.messages.innerHTML = `<div class="empty-state">${escapeHtml(room.name)} opened. Live chat will appear here.</div>`;
       updateRoomHero();
       return;
     }
@@ -906,7 +985,7 @@
 
   function refreshRoomList(silent = false) {
     if (!state.connected) {
-      if (!silent) alert('Pehle login/connect karo.');
+      if (!silent) alert('Please log in or connect first.');
       return;
     }
     wsSend({ handler: 'getchatrooms', admin: String(state.username || state.myName || '') });
@@ -940,7 +1019,7 @@
 
   function joinById() {
     const rid = Number((els.roomId.value || els.roomIdDesk.value || '').trim());
-    if (!rid) return alert('Valid room ID chahiye.');
+    if (!rid) return alert('Please enter a valid room ID.');
     fillRoomFields({ roomid: rid, name: roomNameById(rid) || `Room ${rid}` });
     joinRoomId(rid);
   }
@@ -958,7 +1037,7 @@
       const starts = state.roomList.find(r => normalizeRoomName(r.name).startsWith(q));
       const includes = state.roomList.find(r => normalizeRoomName(r.name).includes(q));
       const found = exact || starts || includes;
-      if (!found) return alert('Room nahi mila. Refresh Rooms dabake phir try karo.');
+      if (!found) return alert('Room not found. Refresh the room list and try again.');
       fillRoomFields(found);
       joinRoomId(found.roomid);
     });
@@ -1010,8 +1089,8 @@
   function sendMessage() {
     const text = els.messageInput.value;
     const rid = state.activeRoomId;
-    if (!state.connected) return alert('Pehle login karo.');
-    if (!rid && state.sendMode !== 'pm') return alert('Pehle room join karo.');
+    if (!state.connected) return alert('Please log in first.');
+    if (!rid && state.sendMode !== 'pm') return alert('Please join a room first.');
 
     let ok = false;
     if (state.sendMode === 'normal') {
@@ -1082,7 +1161,10 @@
   els.joinByIdBtn.onclick = joinById; els.joinByIdDesk.onclick = joinById;
   els.joinByNameBtn.onclick = joinByName; els.joinByNameDesk.onclick = joinByName;
   els.refreshRoomsBtn.onclick = refreshRoomList; els.refreshRoomsDesk.onclick = refreshRoomList; els.refreshRoomsMini.onclick = refreshRoomList;
-  els.refreshUsersTop.onclick = refreshUsers; els.openUsersMini.onclick = () => { refreshUsers(); showDrawer(true); };
+  els.refreshUsersTop.onclick = () => { refreshUsers(); showUsersOverlay(true); };
+  els.openUsersMini.onclick = () => { refreshUsers(); showUsersOverlay(true); };
+  els.closeUsersOverlay.onclick = () => showUsersOverlay(false);
+  els.refreshUsersOverlay.onclick = refreshUsers;
   els.leaveBtnTop.onclick = leaveCurrentRoom;
   els.modeNormal.onclick = () => setMode('normal');
   els.modeSecret.onclick = () => setMode('secret');
@@ -1101,6 +1183,7 @@
   window.addEventListener('resize', updateDesktopVisibility);
 
   updateDesktopVisibility();
+  updateChatFullMode();
   renderTabs();
   renderRooms();
   renderRoomDirectory();
