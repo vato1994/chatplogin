@@ -9,13 +9,13 @@
 <title>Arya Client</title>
 <style>
   :root{
-    --bg:#0a0f15;--panel:#101824;--panel2:#141f2d;--panel3:#1c2b40;--line:#273448;
-    --text:#edf2f7;--muted:#8d9bb0;--blue:#3b82f6;--blue2:#2563eb;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;
-    --bubble:#111a27;--bubbleMine:#18283f;--shadow:0 14px 40px rgba(0,0,0,.28);
+    --bg:#0f1115;--panel:#16181f;--panel2:#1b1f28;--panel3:#242b38;--line:#2a3140;
+    --text:#f5f7fb;--muted:#a0adbf;--blue:dodgerblue;--blue2:#1e78ff;--green:#22c55e;--amber:orange;--red:#ef4444;
+    --bubble:#1a1f29;--bubbleMine:#1f2840;--shadow:0 14px 40px rgba(0,0,0,.28);--accentGrad:linear-gradient(to right, orange, dodgerblue);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{height:100%}
-  body{margin:0;background:linear-gradient(180deg,#091018 0%,#0d1520 100%);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);overflow:hidden}
+  body{margin:0;background:linear-gradient(180deg,#111318 0%,#141922 100%);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);overflow:hidden}
   button,input,textarea{font:inherit}
   .app{height:100svh;display:flex;flex-direction:column}
   .hidden{display:none!important}
@@ -35,7 +35,7 @@
   .brand{font-size:28px;font-weight:900;margin-bottom:4px}
   .sub{color:var(--muted);font-size:13px;line-height:1.4;margin-bottom:14px}
   .stack{display:flex;flex-direction:column;gap:10px}
-  .btn-primary{width:100%;padding:13px 14px;border:none;border-radius:16px;background:linear-gradient(180deg,var(--blue) 0%,var(--blue2) 100%);color:#fff;font-weight:800;cursor:pointer}
+  .btn-primary{width:100%;padding:13px 14px;border:none;border-radius:16px;background:var(--accentGrad);color:#fff;font-weight:800;cursor:pointer;box-shadow:0 10px 25px rgba(30,144,255,.25)}
   .status{display:inline-flex;align-items:center;gap:8px;padding:8px 11px;border-radius:999px;border:1px solid var(--line);background:#121b28;font-size:12px;font-weight:700}
   .dot{width:10px;height:10px;border-radius:50%}.red{background:var(--red)}.amber{background:var(--amber)}.green{background:var(--green)}
   .lobby-head{padding:12px;border-bottom:1px solid var(--line);background:rgba(10,15,21,.92)}
@@ -64,10 +64,20 @@
   .media,.gif-media{display:block;width:min(100%,320px);max-height:320px;object-fit:contain;border-radius:14px;margin-top:8px;border:1px solid var(--line);background:#0c121a}
   .msg-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
   .composer{border-top:1px solid var(--line);background:rgba(10,15,21,.97);backdrop-filter:blur(16px);padding:8px 8px calc(8px + env(safe-area-inset-bottom));display:grid;grid-template-rows:auto auto auto;gap:6px}
-  .room-tabs{display:flex;gap:8px;overflow:auto;padding-bottom:2px}.room-tabs::-webkit-scrollbar{display:none}.tab{flex:0 0 auto;padding:8px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--text);display:inline-flex;align-items:center;gap:7px;cursor:pointer;white-space:nowrap}.tab.active{background:linear-gradient(180deg,#24416c 0%,#1c3355 100%);border-color:#355883}
-  .mode-strip{display:flex;gap:6px;overflow:auto}.mode-strip::-webkit-scrollbar{display:none}.mode-btn{padding:7px 9px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:12px;cursor:pointer;white-space:nowrap}.mode-btn.active{background:linear-gradient(180deg,#24416c 0%,#1c3355 100%);border-color:#355883}
+  .room-tabs{display:flex;gap:8px;overflow:auto;padding-bottom:2px}.room-tabs::-webkit-scrollbar{display:none}.tab{flex:0 0 auto;padding:8px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--text);display:inline-flex;align-items:center;gap:7px;cursor:pointer;white-space:nowrap}.tab.active{background:var(--accentGrad);border-color:#4c6ea0;color:#fff}
+  .mode-strip{display:flex;gap:6px;overflow:auto}.mode-strip::-webkit-scrollbar{display:none}.mode-btn{padding:7px 9px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:12px;cursor:pointer;white-space:nowrap}.mode-btn.active{background:var(--accentGrad);border-color:#4c6ea0;color:#fff}
   .target-row{display:flex;gap:6px}.target-row>*{flex:1;min-width:0}
-  .compose-wrap{position:relative}textarea.field{min-height:48px;max-height:84px;resize:none;padding:12px 46px 12px 12px;line-height:1.25}.send-btn{position:absolute;right:7px;bottom:7px;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;background:linear-gradient(180deg,var(--blue) 0%,var(--blue2) 100%);color:#fff}
+  .compose-wrap{position:relative}textarea.field{min-height:48px;max-height:84px;resize:none;padding:12px 46px 12px 12px;line-height:1.25}.send-btn{position:absolute;right:7px;bottom:7px;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;background:var(--accentGrad);color:#fff;box-shadow:0 8px 18px rgba(30,144,255,.22)}
+
+  .emoji-btn{position:absolute;right:45px;bottom:7px;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;border:1px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer}
+  .emoji-panel{position:absolute;left:0;right:0;bottom:54px;background:#131823;border:1px solid var(--line);border-radius:18px;padding:10px;display:none;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px;box-shadow:var(--shadow)}
+  .emoji-panel.show{display:grid}
+  .emoji-chip{border:1px solid var(--line);background:var(--panel2);border-radius:12px;padding:8px 0;text-align:center;cursor:pointer;font-size:20px}
+  .user-item{background:linear-gradient(180deg,#171c24 0%,#131923 100%);border:1px solid var(--line);border-radius:18px;padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow)}
+  .user-card-main{min-width:0;flex:1}
+  .user-subrow{display:flex;justify-content:space-between;gap:10px;align-items:center}
+  .role-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:999px;background:rgba(255,165,0,.08);border:1px solid rgba(255,165,0,.22);color:#ffd38a;font-size:11px}
+
   .users-sheet{position:fixed;inset:0;background:rgba(0,0,0,.54);display:none;z-index:60}.users-sheet.show{display:block}.users-panel{position:absolute;inset:auto 0 0 0;background:#0f1722;border-top-left-radius:22px;border-top-right-radius:22px;border-top:1px solid var(--line);height:min(76svh,640px);display:flex;flex-direction:column;box-shadow:var(--shadow)}
   .users-head{padding:12px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}.users-body{flex:1;min-height:0;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
   .user-item{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:11px 12px;cursor:pointer}
@@ -81,7 +91,7 @@
     <div class="login-wrap">
       <div class="login-card">
         <div class="brand">Arya Client</div>
-        <div class="sub">Log in, open the room directory, join by room name or room ID, and switch between joined rooms like a real mobile app.</div>
+        <div class="sub">howdies 2.0</div>
         <div class="stack">
           <input id="username" class="field" placeholder="Username" />
           <input id="password" type="password" class="field" placeholder="Password" />
@@ -150,7 +160,9 @@
         <input id="pmUserId" class="field" placeholder="PM user ID" />
       </div>
       <div class="compose-wrap">
+        <div id="emojiPanel" class="emoji-panel"></div>
         <textarea id="messageInput" class="field" placeholder="Type your message"></textarea>
+        <button id="emojiBtn" class="emoji-btn">😊</button>
         <button id="sendBtn" class="send-btn">➤</button>
       </div>
     </div>
@@ -203,7 +215,7 @@
     backToLobbyBtn: $('backToLobbyBtn'), chatRoomTitle: $('chatRoomTitle'), chatRoomMeta: $('chatRoomMeta'), usersBtn: $('usersBtn'), leaveBtn: $('leaveBtn'),
     messages: $('messages'), roomTabs: $('roomTabs'),
     modeNormal: $('modeNormal'), modeSecret: $('modeSecret'), modePm: $('modePm'), addRoomBtn: $('addRoomBtn'),
-    targetUserId: $('targetUserId'), pmUser: $('pmUser'), pmUserId: $('pmUserId'), messageInput: $('messageInput'), sendBtn: $('sendBtn'),
+    targetUserId: $('targetUserId'), pmUser: $('pmUser'), pmUserId: $('pmUserId'), messageInput: $('messageInput'), emojiBtn: $('emojiBtn'), emojiPanel: $('emojiPanel'), sendBtn: $('sendBtn'),
     usersSheet: $('usersSheet'), closeUsersBtn: $('closeUsersBtn'), refreshUsersBtn: $('refreshUsersBtn'), usersTitle: $('usersTitle'), usersMeta: $('usersMeta'), usersList: $('usersList'),
   };
 
@@ -439,7 +451,13 @@
     for (const u of room.users) {
       const el = document.createElement('div');
       el.className = 'user-item';
-      el.innerHTML = `<div class="room-top"><div class="room-name">${escapeHtml(u.username || 'Unknown')}</div><div class="meta">${escapeHtml(u.role || 'user')}</div></div><div class="meta">${escapeHtml(u.userid)}</div>`;
+      const av = document.createElement('div');
+      av.className = 'avatar-wrap';
+      av.appendChild(avatarNode(u.avatar));
+      const main = document.createElement('div');
+      main.className = 'user-card-main';
+      main.innerHTML = `<div class="user-subrow"><div class="room-name">${escapeHtml(u.username || 'Unknown')}</div><div class="role-pill">${escapeHtml(u.role || 'user')}</div></div><div class="meta">User ID ${escapeHtml(u.userid)}</div>`;
+      el.append(av, main);
       el.onclick = () => useUserTarget(u, false);
       el.ondblclick = () => { useUserTarget(u, true); showUsers(false); };
       els.usersList.appendChild(el);
@@ -578,6 +596,32 @@
     if (ok) { els.messageInput.value = ''; autoGrowTextarea(); }
   }
 
+  const EMOJIS = ["😀","😂","😍","🥰","😎","😭","🔥","❤️","👍","🙏","😉","🤝","🎉","😇","😅","😡","💙","🧡","💯","✨","🌸","🎵","😴","🥳"];
+  function initEmojiPanel() {
+    els.emojiPanel.innerHTML = '';
+    EMOJIS.forEach(e => {
+      const b = document.createElement('button');
+      b.className = 'emoji-chip';
+      b.type = 'button';
+      b.textContent = e;
+      b.onclick = () => insertEmoji(e);
+      els.emojiPanel.appendChild(b);
+    });
+  }
+  function toggleEmojiPanel(force) {
+    const show = typeof force === 'boolean' ? force : !els.emojiPanel.classList.contains('show');
+    els.emojiPanel.classList.toggle('show', show);
+  }
+  function insertEmoji(e) {
+    const t = els.messageInput;
+    const start = t.selectionStart ?? t.value.length;
+    const end = t.selectionEnd ?? t.value.length;
+    t.value = t.value.slice(0, start) + e + t.value.slice(end);
+    t.focus();
+    t.selectionStart = t.selectionEnd = start + e.length;
+    autoGrowTextarea();
+  }
+
   function autoGrowTextarea() { const t = els.messageInput; t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 140) + 'px'; }
   function showUsers(show) { els.usersSheet.classList.toggle('show', !!show); if (show) renderUsers(); }
 
@@ -597,10 +641,13 @@
   els.modeNormal.onclick = () => setMode('normal');
   els.modeSecret.onclick = () => setMode('secret');
   els.modePm.onclick = () => setMode('pm');
+  els.emojiBtn.onclick = () => toggleEmojiPanel();
   els.sendBtn.onclick = sendMessage;
   els.messageInput.addEventListener('input', autoGrowTextarea);
   els.messageInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+  document.addEventListener('click', e => { if (!e.target.closest('.compose-wrap')) toggleEmojiPanel(false); });
 
+  initEmojiPanel();
   renderJoinedRooms(); renderRoomDirectory(); renderTabs(); renderMessages(); renderUsers(); updateChatHeader(); autoGrowTextarea();
 })();
 </script>
