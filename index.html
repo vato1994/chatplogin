@@ -1,161 +1,1114 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Custom Delay Multi-Bot</title>
-  <style>
-    body { font-family: 'Segoe UI', sans-serif; background: #121212; color: white; padding: 20px; }
-    .container { max-width: 550px; margin: auto; background: #1e1e1e; padding: 25px; border-radius: 15px; border: 1px solid #333; }
-    h2 { text-align: center; color: #28a745; margin-bottom: 20px; }
-    .field-group { display: flex; gap: 10px; margin-bottom: 10px; }
-    input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #333; background: #252525; color: white; box-sizing: border-box; }
-    label { font-size: 12px; color: #aaa; margin-left: 5px; }
-    button { width: 100%; padding: 15px; background: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; border-radius: 8px; margin-top: 10px; }
-    #log { margin-top: 20px; height: 250px; overflow-y: auto; background: #000; padding: 10px; font-family: monospace; font-size: 12px; border: 1px solid #444; border-radius: 5px; }
-    .settings-box { background: #252525; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Howdies Mobile Chat HTML</title>
+<style>
+  :root {
+    --bg: #0b0f14;
+    --panel: #121821;
+    --panel2: #192230;
+    --panel3: #223047;
+    --text: #eef2f7;
+    --muted: #9aa6b8;
+    --line: #263245;
+    --accent: #4f8cff;
+    --accent2: #7c3aed;
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --bubble: #141c27;
+    --bubbleMine: #18263b;
+    --shadow: 0 10px 30px rgba(0,0,0,.28);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: linear-gradient(180deg, #0b0f14 0%, #0f1520 100%);
+    color: var(--text);
+    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    overflow: hidden;
+  }
+  button, input, textarea { font: inherit; }
+  .app {
+    height: 100svh;
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+  }
+  .topbar {
+    padding: env(safe-area-inset-top) 12px 10px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(11,15,20,.94);
+    backdrop-filter: blur(14px);
+    position: relative;
+    z-index: 20;
+  }
+  .topbar-row {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .app-title { font-weight: 800; font-size: 17px; letter-spacing: .2px; }
+  .grow { flex: 1; }
+  .icon-btn, .chip, .send-btn, .small-btn {
+    border: 1px solid var(--line);
+    background: var(--panel2);
+    color: var(--text);
+    border-radius: 14px;
+    cursor: pointer;
+  }
+  .icon-btn {
+    width: 42px; height: 42px; display: grid; place-items: center; font-size: 24px;
+    box-shadow: var(--shadow);
+  }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    min-width: 0;
+    max-width: 100%;
+    padding: 9px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: #151d28;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .dot.red { background: var(--red); }
+  .dot.amber { background: var(--amber); }
+  .dot.green { background: var(--green); }
+
+  .login-card {
+    margin: 10px 12px 0;
+    padding: 12px;
+    background: rgba(18,24,33,.96);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+  }
+  .field { width: 100%; border: 1px solid var(--line); background: var(--panel2); color: var(--text); border-radius: 14px; padding: 12px 14px; }
+  .field::placeholder, textarea::placeholder { color: #8190a4; }
+  .row { display: flex; gap: 8px; }
+  .row > * { flex: 1; }
+  .btn-primary {
+    width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid #36538d; background: linear-gradient(180deg, #366ae6 0%, #2955be 100%); color: white; font-weight: 800; cursor: pointer;
+  }
+  .btn-secondary { width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel2); color: var(--text); cursor: pointer; }
+  .mini-hint { color: var(--muted); font-size: 12px; line-height: 1.35; }
+
+  .tabs-wrap {
+    border-bottom: 1px solid var(--line);
+    background: rgba(11,15,20,.92);
+    backdrop-filter: blur(14px);
+    position: relative; z-index: 8;
+  }
+  .tabs {
+    display: flex; gap: 8px; overflow-x: auto; padding: 10px 12px; scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex: 0 0 auto;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel2); cursor: pointer; white-space: nowrap; min-height: 42px;
+  }
+  .tab.active { background: linear-gradient(180deg, #24416c 0%, #1c3355 100%); border-color: #355883; }
+  .badge { min-width: 18px; height: 18px; padding: 0 6px; border-radius: 999px; display: inline-grid; place-items: center; font-size: 11px; background: #d946ef; color: white; }
+
+  .chat-area {
+    min-height: 0;
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: 1fr;
+  }
+  .messages {
+    min-height: 0;
+    overflow-y: auto;
+    padding: 12px 12px 110px;
+    display: flex; flex-direction: column; gap: 10px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .empty-state {
+    margin: auto; text-align: center; color: var(--muted); padding: 28px 20px;
+  }
+  .msg {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 10px; border-radius: 18px; border: 1px solid var(--line);
+    background: var(--bubble); box-shadow: var(--shadow);
+  }
+  .msg.mine { background: var(--bubbleMine); }
+  .avatar-wrap { width: 44px; height: 44px; flex: 0 0 44px; position: relative; }
+  .avatar, .avatar-gif {
+    width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: #0e141e; object-fit: cover; display: block;
+  }
+  .avatar-fallback {
+    width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; background: #0e141e; color: #b7c2d4; font-size: 20px;
+  }
+  .msg-main { min-width: 0; flex: 1; }
+  .msg-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .uname { font-weight: 800; }
+  .uid-chip, .meta-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 8px; border-radius: 999px; background: #111926; border: 1px solid var(--line); color: var(--muted); font-size: 12px;
+  }
+  .uid-chip { cursor: pointer; }
+  .msg-text {
+    white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; line-height: 1.45; font-size: 15px;
+  }
+  .media, .gif-media {
+    display: block; width: min(100%, 320px); max-height: 320px; object-fit: contain; border-radius: 14px; margin-top: 8px; border: 1px solid var(--line); background: #0c121a;
+  }
+  .msg-actions {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;
+  }
+  .small-btn { padding: 8px 10px; font-size: 12px; }
+
+  .composer {
+    position: sticky;
+    bottom: 0;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, rgba(11,15,20,.2) 0%, rgba(11,15,20,.92) 16%, rgba(11,15,20,.98) 100%);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid var(--line);
+    z-index: 15;
+  }
+  .mode-strip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; }
+  .mode-strip::-webkit-scrollbar { display: none; }
+  .chip { padding: 10px 12px; white-space: nowrap; }
+  .chip.active { background: linear-gradient(180deg, #24416c 0%, #1c3355 100%); border-color: #355883; }
+  .target-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .target-row > * { flex: 1; min-width: 0; }
+  textarea.field {
+    min-height: 62px; max-height: 180px; resize: none;
+    padding-right: 58px;
+  }
+  .compose-wrap { position: relative; }
+  .send-btn {
+    position: absolute; right: 8px; bottom: 8px; width: 42px; height: 42px;
+    display: grid; place-items: center; font-size: 18px;
+    background: linear-gradient(180deg, #366ae6 0%, #2955be 100%);
+    border-color: #36538d; color: white;
+  }
+  .compose-tools { display: flex; gap: 8px; margin-top: 8px; }
+  .compose-tools > * { flex: 1; }
+
+  .drawer-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,.5); opacity: 0; pointer-events: none; transition: .2s; z-index: 40;
+  }
+  .drawer-backdrop.show { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: fixed; inset: 0 auto 0 0; width: min(92vw, 360px); background: #101721; border-right: 1px solid var(--line);
+    transform: translateX(-100%); transition: .25s ease; z-index: 45; display: flex; flex-direction: column; box-shadow: var(--shadow);
+  }
+  .drawer.show { transform: translateX(0); }
+  .drawer-head { padding: calc(12px + env(safe-area-inset-top)) 12px 12px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px; }
+  .drawer-title { font-weight: 800; }
+  .drawer-body { min-height: 0; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 12px; }
+  .list { display: flex; flex-direction: column; gap: 8px; }
+  .room-item, .user-item {
+    padding: 11px 12px; border-radius: 14px; background: var(--panel2); border: 1px solid var(--line); cursor: pointer;
+  }
+  .room-item.active { outline: 2px solid #3c6dd5; }
+  .room-top { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+  .room-name { font-weight: 800; }
+  .meta { color: var(--muted); font-size: 12px; }
+  .pill-mini { padding: 3px 7px; border-radius: 999px; border: 1px solid var(--line); background: #121b29; font-size: 11px; color: var(--muted); }
+  .section-title { font-size: 13px; font-weight: 800; color: var(--muted); margin-bottom: 8px; }
+  .search-hit { outline: 2px solid #f59e0b; }
+  .hidden { display: none !important; }
+
+  @media (min-width: 920px) {
+    .app { grid-template-columns: 320px 1fr 320px; grid-template-rows: auto auto 1fr auto; }
+    .topbar, .tabs-wrap, .chat-area, .composer { grid-column: 2; }
+    .left-pane, .right-pane {
+      display: flex !important;
+      flex-direction: column;
+      min-height: 0;
+      border-right: 1px solid var(--line);
+      background: rgba(16,23,33,.94);
+    }
+    .right-pane { grid-column: 3; border-right: 0; border-left: 1px solid var(--line); }
+    .left-pane { grid-column: 1; grid-row: 1 / span 4; }
+    .right-pane { grid-row: 1 / span 4; }
+    .drawer, .drawer-backdrop { display: none; }
+    .desktop-panel-head { padding: 18px 14px 12px; border-bottom: 1px solid var(--line); font-weight: 800; }
+    .desktop-scroll { min-height: 0; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+    .topbar { padding-top: 12px; }
+  }
+</style>
 </head>
 <body>
-
-<div class="container">
-  <h2>🤖 UNLOYAL Multi bet Bot</h2>
-  
-  <input type="text" id="username" placeholder="Usernames (user1#user2#user3)">
-  <input type="password" id="password" placeholder="Common Password">
-  <input type="number" id="roomid" placeholder="Room ID">
-  
-  <div class="settings-box">
-    <p style="margin: 0 0 10px 0; font-size: 14px; color: #28a745;">Message & Delay Settings</p>
-    <div class="field-group">
-      <div style="flex: 2;"><label>Message 1</label><input type="text" id="msg1" value="NILA FIRST MSG"></div>
-      <div style="flex: 2;"><label>Message 2</label><input type="text" id="msg2" value="NILA SECOND MSG"></div>
+<div class="app">
+  <aside class="left-pane hidden" id="leftPane">
+    <div class="desktop-panel-head">Rooms</div>
+    <div class="desktop-scroll">
+      <div class="card">
+        <div class="section-title">Login</div>
+        <input id="usernameDesk" class="field" placeholder="Username" />
+        <div style="height:8px"></div>
+        <input id="passwordDesk" type="password" class="field" placeholder="Password" />
+        <div style="height:8px"></div>
+        <div class="row"><button id="loginBtnDesk" class="btn-primary">Login</button><button id="disconnectBtnDesk" class="btn-secondary">Disconnect</button></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Add room</div>
+        <div class="row">
+          <input id="roomIdDesk" class="field" placeholder="Room ID" />
+          <button id="joinByIdDesk" class="btn-secondary">Join</button>
+        </div>
+        <div style="height:8px"></div>
+        <div class="row">
+          <input id="roomNameDesk" class="field" placeholder="Room name" />
+          <button id="joinByNameDesk" class="btn-secondary">By name</button>
+        </div>
+        <div style="height:8px"></div>
+        <button id="refreshRoomsDesk" class="btn-secondary">Refresh room list</button>
+      </div>
+      <div class="card">
+        <div class="section-title">Joined rooms</div>
+        <div id="joinedRoomsDesk" class="list"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Room directory</div>
+        <input id="roomSearchDesk" class="field" placeholder="Search rooms" />
+        <div style="height:8px"></div>
+        <div id="roomDirectoryDesk" class="list"></div>
+      </div>
     </div>
-    <div class="field-group">
-      <div style="flex: 1;"><label>Msg Delay (sec)</label><input type="number" id="msgDelay" value="2"></div>
-      <div style="flex: 1;"><label>Loop Gap (sec)</label><input type="number" id="loopGap" value="5"></div>
+  </aside>
+
+  <div class="topbar">
+    <div class="topbar-row">
+      <button id="menuBtn" class="icon-btn">☰</button>
+      <div class="app-title">Howdies Chat</div>
+      <div class="grow"></div>
+      <button id="plusBtn" class="icon-btn">＋</button>
+    </div>
+    <div style="height:8px"></div>
+    <div class="topbar-row">
+      <div id="statusPill" class="status-pill"><span class="dot red"></span>Offline</div>
+      <div class="grow"></div>
+      <button id="leaveBtnTop" class="btn-secondary" style="width:auto;padding:10px 12px">Leave</button>
+      <button id="refreshUsersTop" class="btn-secondary" style="width:auto;padding:10px 12px">Users</button>
     </div>
   </div>
 
-  <button id="startBtn">Launch All Bots</button>
-  <div id="log"></div>
+  <div id="loginCard" class="login-card">
+    <div class="row">
+      <input id="username" class="field" placeholder="Username" />
+      <input id="password" type="password" class="field" placeholder="Password" />
+    </div>
+    <div style="height:8px"></div>
+    <div class="row">
+      <button id="loginBtn" class="btn-primary">Login</button>
+      <button id="disconnectBtn" class="btn-secondary">Disconnect</button>
+    </div>
+    <div style="height:8px"></div>
+    <div class="mini-hint">Single-file HTML. Room list server se <b>getchatrooms + admin=username</b> se load hogi, external file se nahi.</div>
+  </div>
+
+  <div class="tabs-wrap">
+    <div id="tabs" class="tabs"></div>
+  </div>
+
+  <main class="chat-area">
+    <div id="roomHero" style="padding:10px 12px;border-bottom:1px solid var(--line);background:rgba(12,18,26,.82);backdrop-filter:blur(10px)"><div style="font-weight:800;font-size:16px" id="roomHeroName">No room selected</div><div style="color:var(--muted);font-size:12px;margin-top:2px" id="roomHeroMeta">Login karo, phir room join karo</div></div>
+    <div id="messages" class="messages"></div>
+  </main>
+
+  <div class="composer">
+    <div class="mode-strip">
+      <button id="modeNormal" class="chip active">Normal</button>
+      <button id="modeSecret" class="chip">Secret</button>
+      <button id="modePm" class="chip">PM</button>
+      <button id="refreshRoomsMini" class="chip">Rooms</button>
+      <button id="openUsersMini" class="chip">Users</button>
+    </div>
+    <div class="target-row">
+      <input id="targetUserId" class="field" placeholder="Secret UserID" />
+      <input id="pmUser" class="field" placeholder="PM Username" />
+      <input id="pmUserId" class="field" placeholder="PM UserID" />
+    </div>
+    <div class="compose-wrap">
+      <textarea id="messageInput" class="field" placeholder="Message type karo… Enter = send, Shift+Enter = new line"></textarea>
+      <button id="sendBtn" class="send-btn">➤</button>
+    </div>
+    <div class="compose-tools">
+      <input id="searchInput" class="field" placeholder="Search current room" />
+      <button id="searchBtn" class="btn-secondary">Find</button>
+    </div>
+  </div>
+
+  <aside class="right-pane hidden" id="rightPane">
+    <div class="desktop-panel-head">Current room users</div>
+    <div class="desktop-scroll">
+      <div class="card">
+        <div class="section-title">Double click se Secret/PM target fill hoga</div>
+        <div id="usersDesk" class="list"></div>
+      </div>
+    </div>
+  </aside>
 </div>
 
+<div id="backdrop" class="drawer-backdrop"></div>
+<aside id="drawer" class="drawer">
+  <div class="drawer-head">
+    <button id="closeDrawer" class="icon-btn" style="width:38px;height:38px;font-size:18px">✕</button>
+    <div class="drawer-title">Rooms & Users</div>
+  </div>
+  <div class="drawer-body">
+    <div class="card">
+      <div class="section-title">Add room</div>
+      <div class="row">
+        <input id="roomId" class="field" placeholder="Room ID" />
+        <button id="joinByIdBtn" class="btn-secondary">Join</button>
+      </div>
+      <div style="height:8px"></div>
+      <div class="row">
+        <input id="roomName" class="field" placeholder="Room name" />
+        <button id="joinByNameBtn" class="btn-secondary">By name</button>
+      </div>
+      <div style="height:8px"></div>
+      <button id="refreshRoomsBtn" class="btn-secondary">Refresh room list</button>
+      <div id="roomsHint" class="mini-hint" style="margin-top:8px">Login ke baad room list auto refresh hogi.</div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Joined rooms</div>
+      <div id="joinedRooms" class="list"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Room directory</div>
+      <input id="roomSearch" class="field" placeholder="Search room directory" />
+      <div style="height:8px"></div>
+      <div id="roomDirectory" class="list"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Current room users</div>
+      <div id="users" class="list"></div>
+    </div>
+  </div>
+</aside>
+
 <script>
-  const logDiv = document.getElementById('log');
-  function addLog(msg) {
-    const p = document.createElement('div');
-    p.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-    logDiv.appendChild(p);
-    logDiv.scrollTop = logDiv.scrollHeight;
+(() => {
+  const WS_URL = 'wss://app.howdies.app/howdies/';
+  const IMAGE_RE = /(https?:\/\/\S+?(?:\.png|\.jpg|\.jpeg|\.gif|\.webp|\.bmp))(?!\S)/i;
+  const URL_RE = /(https?:\/\/\S+)/ig;
+  const isDesktop = () => window.matchMedia('(min-width: 920px)').matches;
+
+  const state = {
+    ws: null,
+    connected: false,
+    loggedIn: false,
+    loginSent: false,
+    username: '',
+    password: '',
+    roomList: [],
+    roomListStamp: 0,
+    roomTimer: null,
+    rooms: new Map(),
+    activeRoomId: null,
+    sendMode: 'normal',
+    searchIndex: -1,
+    drawerOpen: false,
+    touchTimer: null,
+    myName: '',
+  };
+
+  const $ = id => document.getElementById(id);
+  const els = {
+    statusPill: $('statusPill'),
+    menuBtn: $('menuBtn'), plusBtn: $('plusBtn'),
+    loginCard: $('loginCard'), username: $('username'), password: $('password'), loginBtn: $('loginBtn'), disconnectBtn: $('disconnectBtn'),
+    usernameDesk: $('usernameDesk'), passwordDesk: $('passwordDesk'), loginBtnDesk: $('loginBtnDesk'), disconnectBtnDesk: $('disconnectBtnDesk'),
+    tabs: $('tabs'), messages: $('messages'), roomHero: $('roomHero'), roomHeroName: $('roomHeroName'), roomHeroMeta: $('roomHeroMeta'),
+    messageInput: $('messageInput'), sendBtn: $('sendBtn'),
+    targetUserId: $('targetUserId'), pmUser: $('pmUser'), pmUserId: $('pmUserId'),
+    modeNormal: $('modeNormal'), modeSecret: $('modeSecret'), modePm: $('modePm'),
+    refreshRoomsMini: $('refreshRoomsMini'), openUsersMini: $('openUsersMini'),
+    roomId: $('roomId'), roomName: $('roomName'), joinByIdBtn: $('joinByIdBtn'), joinByNameBtn: $('joinByNameBtn'), refreshRoomsBtn: $('refreshRoomsBtn'), roomsHint: $('roomsHint'),
+    roomIdDesk: $('roomIdDesk'), roomNameDesk: $('roomNameDesk'), joinByIdDesk: $('joinByIdDesk'), joinByNameDesk: $('joinByNameDesk'), refreshRoomsDesk: $('refreshRoomsDesk'),
+    joinedRooms: $('joinedRooms'), joinedRoomsDesk: $('joinedRoomsDesk'),
+    roomSearch: $('roomSearch'), roomDirectory: $('roomDirectory'), roomSearchDesk: $('roomSearchDesk'), roomDirectoryDesk: $('roomDirectoryDesk'),
+    users: $('users'), usersDesk: $('usersDesk'),
+    searchInput: $('searchInput'), searchBtn: $('searchBtn'),
+    leaveBtnTop: $('leaveBtnTop'), refreshUsersTop: $('refreshUsersTop'),
+    backdrop: $('backdrop'), drawer: $('drawer'), closeDrawer: $('closeDrawer'),
+    leftPane: $('leftPane'), rightPane: $('rightPane'),
+  };
+
+  function syncLoginFields(fromDesk = false) {
+    if (fromDesk) {
+      els.username.value = els.usernameDesk.value;
+      els.password.value = els.passwordDesk.value;
+    } else {
+      els.usernameDesk.value = els.username.value;
+      els.passwordDesk.value = els.password.value;
+    }
   }
 
-  async function login(username, password) {
-    try {
-      const resp = await fetch("https://api.howdies.app/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
+  function setStatus(kind, text) {
+    const cls = kind === 'ready' ? 'green' : kind === 'connected' ? 'amber' : 'red';
+    els.statusPill.innerHTML = `<span class="dot ${cls}"></span>${escapeHtml(text)}`;
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  function linkify(s) {
+    return s.replace(URL_RE, u => `<a href="${u}" target="_blank" rel="noopener">${u}</a>`);
+  }
+
+  function showDrawer(show) {
+    state.drawerOpen = show;
+    els.drawer.classList.toggle('show', show);
+    els.backdrop.classList.toggle('show', show);
+  }
+
+  function currentRoom() {
+    return state.rooms.get(state.activeRoomId) || null;
+  }
+
+  function wsSend(obj) {
+    if (!state.ws || state.ws.readyState !== WebSocket.OPEN) {
+      state.connected = false;
+      setStatus('offline', 'Offline');
+      return false;
+    }
+    state.ws.send(JSON.stringify(obj));
+    return true;
+  }
+
+  function connectAndLogin() {
+    syncLoginFields(false);
+    state.username = els.username.value.trim();
+    state.password = els.password.value;
+    if (!state.username || !state.password) return alert('Username/password chahiye.');
+    state.myName = state.username;
+    try { state.ws?.close(); } catch {}
+    setStatus('connected', 'Connecting…');
+    state.ws = new WebSocket(WS_URL);
+    state.connected = false;
+    state.loggedIn = false;
+    state.loginSent = false;
+
+    state.ws.onopen = () => {
+      state.connected = true;
+      setStatus('connected', 'Connected. Sending login…');
+      state.loginSent = wsSend({
+        handler: 'loginnew',
+        username: state.username,
+        password: state.password,
+        fcmt: 'html-mobile-client',
+        lp: true,
+        loginType: 'H',
+        devData: {
+          uniqueID: `HTML-${state.username}-${Math.floor(Math.random()*9000+1000)}`,
+          manufacturer: 'browser',
+          buildNumber: '237',
+          apiLevel: -1,
+          language: 'en',
+          model: 'HTML',
+          brand: 'browser',
+          instanceID: 'html',
+          isEmulator: false,
+          isLowRamDevice: false,
+          OS: navigator.platform || 'browser',
+        }
       });
-      const data = await resp.json();
-      return data.token || null;
-    } catch (e) { return null; }
+    };
+    state.ws.onmessage = ev => handlePacket(ev.data);
+    state.ws.onerror = () => setStatus('offline', 'WebSocket error');
+    state.ws.onclose = () => {
+      state.connected = false;
+      state.loggedIn = false;
+      state.loginSent = false;
+      stopRoomAutoRefresh();
+      setStatus('offline', 'Disconnected');
+    };
   }
 
-  async function startBot() {
-    const userStr = document.getElementById('username').value.trim();
-    const pass = document.getElementById('password').value;
-    const room = document.getElementById('roomid').value.trim();
-    const m1 = document.getElementById('msg1').value;
-    const m2 = document.getElementById('msg2').value;
-    const mDelay = parseInt(document.getElementById('msgDelay').value) * 1000;
-    const lGap = parseInt(document.getElementById('loopGap').value) * 1000;
+  function unwrapPacket(obj) {
+    if (!obj || typeof obj !== 'object') return obj;
+    if (obj.data && typeof obj.data === 'object' && !Array.isArray(obj.data) && (obj.data.handler || obj.data.type)) {
+      const inner = { ...obj.data };
+      if (obj.roomid != null && inner.roomid == null) inner.roomid = obj.roomid;
+      if (obj.roomId != null && inner.roomId == null) inner.roomId = obj.roomId;
+      if (obj.error != null && inner.error == null) inner.error = obj.error;
+      if (obj.status != null && inner.status == null) inner.status = obj.status;
+      return inner;
+    }
+    return obj;
+  }
 
-    if (!userStr || !pass || !room) return alert("Details fill karein!");
+  function handlePacket(raw) {
+    let msg;
+    try { msg = unwrapPacket(JSON.parse(raw)); } catch { return; }
+    const handler = msg.handler || msg.type || '';
+    const blob = JSON.stringify(msg).toLowerCase();
 
-    const users = userStr.split('#');
-    addLog(`🚀 Initializing ${users.length} accounts...`);
+    if (!state.loggedIn && (msg.status === 'success' || msg.error === 0) && /login/.test(blob)) {
+      state.loggedIn = true;
+      setStatus('ready', 'Logged in');
+      refreshRoomList(true);
+      startRoomAutoRefresh();
+    }
 
-    for (let user of users) {
-      const token = await login(user, pass);
-      if (token) {
-        addLog(`✅ Authenticated: ${user}`);
-        connectWS(token, user, pass, room, m1, m2, mDelay, lGap);
-      } else {
-        addLog(`❌ Auth Failed: ${user}`);
+    if (['loginnew', 'loginnewsuccess', 'login'].includes(handler) && (/success/.test(blob) || msg.error === 0)) {
+      state.loggedIn = true;
+      setStatus('ready', 'Logged in');
+      refreshRoomList(true);
+      startRoomAutoRefresh();
+    }
+
+    if (['getchatrooms', 'rooms', 'listRoom', 'Global'].includes(handler)) {
+      const rooms = extractRooms(msg);
+      if (rooms.length) {
+        state.roomList = rooms;
+        state.roomListStamp = Date.now();
+        els.roomsHint.textContent = `${rooms.length} rooms loaded`;
+        renderRoomDirectory();
+      }
+    }
+
+    if (handler === 'joinchatroom' && (msg.error === 0 || msg.roomid || msg.roomId)) {
+      const rid = Number(msg.roomid || msg.roomId || 0);
+      const name = msg.name || roomNameById(rid) || `Room ${rid}`;
+      ensureRoom(rid, name);
+      activateRoom(rid);
+      setStatus('ready', `Ready in ${name}`);
+      refreshUsers();
+      if (!isDesktop()) showDrawer(false);
+    }
+
+    if (handler === 'leavechatroom' && (msg.error === 0 || msg.roomid || msg.roomId)) {
+      const rid = Number(msg.roomid || msg.roomId || 0);
+      if (state.rooms.has(rid)) removeRoom(rid);
+    }
+
+    if (handler === 'getusers' || handler === 'activeoccupants') {
+      const rid = Number(msg.roomid || msg.roomId || state.activeRoomId || 0);
+      const users = extractUsers(msg);
+      if (rid && state.rooms.has(rid)) {
+        state.rooms.get(rid).users = users;
+        renderUsers();
+        updateRoomHero();
+      }
+    }
+
+    if (handler === 'userjoin' || handler === 'userleft') {
+      if (state.activeRoomId) refreshUsers();
+    }
+
+    if (handler === 'chatroommessage' || handler === 'message') {
+      const inferredRid = handler === 'message' ? -1 : (state.activeRoomId || 0);
+      const rid = Number(msg.roomid || msg.roomId || inferredRid || 0) || inferredRid || -1;
+      ensureRoom(rid, roomNameById(rid) || (rid === -1 ? 'PM' : `Room ${rid}`));
+      const room = state.rooms.get(rid);
+      room.messages.push(normalizeMessage(msg));
+      if (state.activeRoomId !== rid) room.unread = (room.unread || 0) + 1;
+      renderRooms();
+      renderTabs();
+      if (state.activeRoomId === rid) renderMessages();
+    }
+  }
+
+  function extractRooms(msg) {
+    let data = msg?.data ?? msg?.rooms ?? msg?.list ?? msg?.result ?? msg?.chatrooms ?? msg?.Global ?? msg?.global ?? [];
+    if (msg?.data && typeof msg.data === 'object' && !Array.isArray(msg.data)) {
+      data = msg.data.Global ?? msg.data.global ?? msg.data.rooms ?? msg.data.list ?? msg.data.data ?? data;
+    }
+    if (!Array.isArray(data) && Array.isArray(msg?.data?.data)) data = msg.data.data;
+    if (!Array.isArray(data) && Array.isArray(msg?.data?.rooms)) data = msg.data.rooms;
+    if (!Array.isArray(data) && Array.isArray(msg?.Global)) data = msg.Global;
+    if (!Array.isArray(data) && Array.isArray(msg?.global)) data = msg.global;
+    if (!Array.isArray(data)) return [];
+    const seen = new Set();
+    const out = [];
+    for (const r of data) {
+      const roomid = Number(r?.roomid ?? r?.id ?? r?.roomId ?? 0);
+      const name = String(r?.name ?? r?.room ?? r?.roomname ?? '').trim();
+      if (!roomid || !name || seen.has(roomid)) continue;
+      seen.add(roomid);
+      out.push({ roomid, name, users: Number(r?.usercount ?? r?.users ?? r?.occupants ?? 0) });
+    }
+    return out.sort((a,b) => a.name.localeCompare(b.name));
+  }
+
+  function extractUsers(msg) {
+    const arr = msg.users || msg.data?.users || msg.data || [];
+    if (!Array.isArray(arr)) return [];
+    return arr.map(u => ({
+      userid: Number(u.userid ?? u.userId ?? u.UserID ?? 0),
+      username: String(u.username ?? u.Username ?? ''),
+      avatar: u.avatar || u.Avatar || '',
+      role: u.role || u.userRole || '',
+    })).filter(Boolean);
+  }
+
+  function normalizeMessage(msg) {
+    const text = msg.text ?? '';
+    const url = msg.url ?? '';
+    const avatar = msg.avatar || msg.Avatar || '';
+    const media = url || (String(text).match(IMAGE_RE)?.[1] || '');
+    return {
+      username: msg.username || msg.Username || 'Unknown',
+      userid: msg.userid ?? msg.UserID ?? msg.userId ?? 0,
+      avatar,
+      text,
+      url,
+      media,
+      type: msg.type || 'text',
+      secret: !!msg.secret,
+      mine: String(msg.username || msg.Username || '').toLowerCase() === String(state.myName || '').toLowerCase(),
+      ts: new Date(),
+    };
+  }
+
+  function ensureRoom(rid, name) {
+    if (!state.rooms.has(rid)) state.rooms.set(rid, { roomid: rid, name, messages: [], users: [], unread: 0 });
+  }
+
+  function roomNameById(rid) {
+    return state.roomList.find(r => Number(r.roomid) === Number(rid))?.name || state.rooms.get(rid)?.name || '';
+  }
+
+  function updateRoomHero() {
+    const room = currentRoom();
+    if (!room) {
+      els.roomHeroName.textContent = 'No room selected';
+      els.roomHeroMeta.textContent = state.loggedIn ? '＋ se room add karo ya room name/ID se join karo' : 'Login karo, phir room join karo';
+      return;
+    }
+    els.roomHeroName.textContent = room.name;
+    els.roomHeroMeta.textContent = `Room ID ${room.roomid} • ${room.users?.length || 0} users • ${room.messages.length} msgs`;
+  }
+
+  function activateRoom(rid) {
+    state.activeRoomId = rid;
+    const room = currentRoom();
+    if (room) room.unread = 0;
+    renderRooms();
+    renderTabs();
+    renderMessages();
+    renderUsers();
+    updateRoomHero();
+  }
+
+  function removeRoom(rid) {
+    state.rooms.delete(rid);
+    if (state.activeRoomId === rid) {
+      state.activeRoomId = [...state.rooms.keys()][0] || null;
+    }
+    renderRooms();
+    renderTabs();
+    renderMessages();
+    renderUsers();
+    updateRoomHero();
+    if (state.activeRoomId) setStatus('ready', `Ready in ${roomNameById(state.activeRoomId) || ('Room ' + state.activeRoomId)}`);
+    else setStatus(state.connected ? 'connected' : 'offline', state.connected ? 'Connected' : 'Offline');
+  }
+
+  function avatarNode(url) {
+    if (!url) {
+      const fallback = document.createElement('div');
+      fallback.className = 'avatar-fallback';
+      fallback.textContent = '👤';
+      return fallback;
+    }
+    const isGif = /\.gif(\?|$)/i.test(url);
+    const img = document.createElement('img');
+    img.className = isGif ? 'avatar-gif' : 'avatar';
+    img.src = url;
+    img.loading = 'lazy';
+    img.onerror = () => {
+      img.replaceWith(Object.assign(document.createElement('div'), { className: 'avatar-fallback', textContent: '👤' }));
+    };
+    return img;
+  }
+
+  function mediaNode(url) {
+    if (!url) return null;
+    const lower = url.toLowerCase();
+    if (/\.(gif|png|jpg|jpeg|webp|bmp)(\?|$)/i.test(lower)) {
+      const img = document.createElement('img');
+      img.className = /\.gif(\?|$)/i.test(lower) ? 'gif-media' : 'media';
+      img.src = url;
+      img.loading = 'lazy';
+      img.alt = 'media';
+      return img;
+    }
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.textContent = url;
+    return a;
+  }
+
+  function renderTabs() {
+    const items = [...state.rooms.values()];
+    els.tabs.innerHTML = items.length ? '' : '<div class="tab active">No room yet</div>';
+    for (const r of items) {
+      const el = document.createElement('button');
+      el.className = 'tab' + (state.activeRoomId === r.roomid ? ' active' : '');
+      el.innerHTML = `<span>${escapeHtml(r.name)}</span>${r.unread ? `<span class="badge">${r.unread}</span>` : ''}`;
+      el.onclick = () => activateRoom(r.roomid);
+      els.tabs.appendChild(el);
+    }
+  }
+
+  function roomItemMarkup(r) {
+    return `<div class="room-top"><div class="room-name">${escapeHtml(r.name)}</div>${r.unread ? `<span class="badge">${r.unread}</span>` : `<span class="pill-mini">ID ${r.roomid}</span>`}</div><div class="meta">Room ${r.roomid}</div>`;
+  }
+
+  function renderRooms() {
+    const items = [...state.rooms.values()];
+    const targets = [els.joinedRooms, els.joinedRoomsDesk];
+    for (const target of targets) {
+      target.innerHTML = items.length ? '' : '<div class="mini-hint">Abhi koi room joined nahi hai.</div>';
+      for (const r of items) {
+        const el = document.createElement('div');
+        el.className = 'room-item' + (state.activeRoomId === r.roomid ? ' active' : '');
+        el.dataset.rid = r.roomid;
+        el.innerHTML = roomItemMarkup(r);
+        el.onclick = () => { activateRoom(r.roomid); if (!isDesktop()) showDrawer(false); };
+        target.appendChild(el);
       }
     }
   }
 
-  function connectWS(token, user, pass, room, m1, m2, mDelay, lGap) {
-    let socket = new WebSocket(`wss://app.howdies.app/howdies/?token=${token}`);
-    let isRunning = true;
+  function renderRoomDirectory() {
+    const qs = [(els.roomSearch.value || '').trim().toLowerCase(), (els.roomSearchDesk.value || '').trim().toLowerCase()];
+    const filteredMobile = state.roomList.filter(r => !qs[0] || r.name.toLowerCase().includes(qs[0]) || String(r.roomid).includes(qs[0])).slice(0, 120);
+    const filteredDesk = state.roomList.filter(r => !qs[1] || r.name.toLowerCase().includes(qs[1]) || String(r.roomid).includes(qs[1])).slice(0, 120);
+    [[els.roomDirectory, filteredMobile],[els.roomDirectoryDesk, filteredDesk]].forEach(([target, arr]) => {
+      target.innerHTML = arr.length ? '' : '<div class="mini-hint">Room list empty.</div>';
+      for (const r of arr) {
+        const el = document.createElement('div');
+        el.className = 'room-item';
+        el.innerHTML = `<div class="room-top"><div class="room-name">${escapeHtml(r.name)}</div><span class="pill-mini">${r.users || 0}</span></div><div class="meta">ID ${r.roomid}</div>`;
+        el.onclick = () => {
+          fillRoomFields(r);
+          joinRoomId(r.roomid);
+          if (!isDesktop()) showDrawer(false);
+        };
+        target.appendChild(el);
+      }
+    });
+  }
 
-    async function startLoop() {
-      while (isRunning) {
-        if (socket.readyState === 1) {
-          // Send Msg 1
-          sendMsg(socket, room, m1);
-          addLog(`📤 [${user}] Sent: ${m1}`);
-          
-          // Wait for custom Message Delay
-          await new Promise(r => setTimeout(r, mDelay));
-          
-          if (socket.readyState === 1) {
-            // Send Msg 2
-            sendMsg(socket, room, m2);
-            addLog(`📤 [${user}] Sent: ${m2}`);
-          }
-          
-          // Wait for custom Loop Gap
-          await new Promise(r => setTimeout(r, lGap));
-        } else {
-          // If socket not ready, wait a bit and retry
-          await new Promise(r => setTimeout(r, 2000));
+  function renderUsers() {
+    const room = currentRoom();
+    const targets = [els.users, els.usersDesk];
+    for (const target of targets) {
+      target.innerHTML = room && room.users.length ? '' : '<div class="mini-hint">Current room users yahan aayenge.</div>';
+      if (!room) continue;
+      for (const u of room.users) {
+        const el = document.createElement('div');
+        el.className = 'user-item';
+        el.innerHTML = `<div class="room-top"><div class="room-name">${escapeHtml(u.username || 'Unknown')}</div><span class="pill-mini">${escapeHtml(u.role || '') || 'user'}</span></div><div class="meta">${escapeHtml(u.userid)}</div>`;
+        el.ondblclick = () => useUserTarget(u);
+        el.onclick = () => useUserTarget(u, false);
+        target.appendChild(el);
+      }
+    }
+  }
+
+  function renderMessages() {
+    const room = currentRoom();
+    els.messages.innerHTML = '';
+    if (!room) {
+      els.messages.innerHTML = '<div class="empty-state">Login karo, phir + se room add karke chat start karo.</div>';
+      updateRoomHero();
+      return;
+    }
+    if (!room.messages.length) {
+      els.messages.innerHTML = `<div class="empty-state">${escapeHtml(room.name)} khul gaya. Ab yahan live chat aayegi.</div>`;
+      updateRoomHero();
+      return;
+    }
+    room.messages.forEach((m, idx) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'msg' + (m.mine ? ' mine' : '');
+      const aw = document.createElement('div'); aw.className = 'avatar-wrap'; aw.appendChild(avatarNode(m.avatar));
+      wrap.appendChild(aw);
+      const main = document.createElement('div'); main.className = 'msg-main';
+      const head = document.createElement('div'); head.className = 'msg-head';
+      head.innerHTML = `<span class="uname">${escapeHtml(m.username)}</span><button class="uid-chip" data-uid="${escapeHtml(m.userid)}">${escapeHtml(m.userid)}</button><span class="meta-chip">${escapeHtml(m.type)}${m.secret ? ' • secret' : ''}</span><span class="meta-chip">${m.ts.toLocaleTimeString()}</span>`;
+      main.appendChild(head);
+      const txt = document.createElement('div'); txt.className = 'msg-text'; txt.innerHTML = linkify(escapeHtml(m.text || ''));
+      main.appendChild(txt);
+      const media = mediaNode(m.media);
+      if (media) main.appendChild(media);
+      const actions = document.createElement('div'); actions.className = 'msg-actions';
+      const secretBtn = document.createElement('button');
+      secretBtn.className = 'small-btn';
+      secretBtn.textContent = 'Send this as secret';
+      secretBtn.onclick = () => quickSecretFromMessage(m);
+      const useIdBtn = document.createElement('button');
+      useIdBtn.className = 'small-btn'; useIdBtn.textContent = 'Use this ID';
+      useIdBtn.onclick = () => useUserTarget({ userid: m.userid, username: m.username }, true);
+      actions.append(secretBtn, useIdBtn);
+      main.appendChild(actions);
+      wrap.appendChild(main);
+      wrap.querySelector('.uid-chip').onclick = (e) => { e.stopPropagation(); handleUidTap(m); };
+      wrap.ondblclick = () => useUserTarget({ userid: m.userid, username: m.username }, true);
+      els.messages.appendChild(wrap);
+    });
+    els.messages.scrollTop = els.messages.scrollHeight;
+    updateRoomHero();
+  }
+
+  function handleUidTap(m) {
+    clearTimeout(state.touchTimer);
+    if (state._lastUid === m.userid && Date.now() - (state._lastUidAt || 0) < 350) {
+      useUserTarget({ userid: m.userid, username: m.username }, true);
+      state._lastUid = null;
+      return;
+    }
+    state._lastUid = m.userid;
+    state._lastUidAt = Date.now();
+    state.touchTimer = setTimeout(() => { state._lastUid = null; }, 360);
+  }
+
+  function useUserTarget(u, switchSecret = true) {
+    els.targetUserId.value = u.userid || '';
+    els.pmUser.value = u.username || '';
+    els.pmUserId.value = u.userid || '';
+    if (switchSecret) setMode('secret');
+  }
+
+  function quickSecretFromMessage(m) {
+    useUserTarget({ userid: m.userid, username: m.username }, true);
+    if ((els.messageInput.value || '') !== '') {
+      sendMessage();
+    } else {
+      els.messageInput.focus();
+      setStatus('ready', `Secret target set: ${m.username} (${m.userid})`);
+    }
+  }
+
+  function ensureRoomListFresh(cb) {
+    const fresh = Date.now() - state.roomListStamp < 30000 && state.roomList.length;
+    if (fresh) return cb?.();
+    refreshRoomList(true);
+    let tries = 0;
+    const timer = setInterval(() => {
+      tries += 1;
+      if (state.roomList.length) { clearInterval(timer); cb?.(); return; }
+      if (tries >= 6) { clearInterval(timer); cb?.(); }
+    }, 350);
+  }
+
+  function refreshRoomList(silent = false) {
+    if (!state.connected) {
+      if (!silent) alert('Pehle login/connect karo.');
+      return;
+    }
+    wsSend({ handler: 'getchatrooms', admin: String(state.username || state.myName || '') });
+  }
+
+  function startRoomAutoRefresh() {
+    stopRoomAutoRefresh();
+    state.roomTimer = setInterval(() => {
+      if (state.connected) refreshRoomList();
+    }, 25000);
+  }
+
+  function stopRoomAutoRefresh() {
+    if (state.roomTimer) clearInterval(state.roomTimer);
+    state.roomTimer = null;
+  }
+
+  function fillRoomFields(r) {
+    els.roomId.value = r.roomid;
+    els.roomName.value = r.name;
+    els.roomIdDesk.value = r.roomid;
+    els.roomNameDesk.value = r.name;
+  }
+
+  function joinRoomId(rid) {
+    rid = Number(rid || 0);
+    if (!rid) return;
+    ensureRoom(rid, roomNameById(rid) || `Room ${rid}`);
+    wsSend({ handler: 'joinchatroom', roomid: rid });
+  }
+
+  function joinById() {
+    const rid = Number((els.roomId.value || els.roomIdDesk.value || '').trim());
+    if (!rid) return alert('Valid room ID chahiye.');
+    fillRoomFields({ roomid: rid, name: roomNameById(rid) || `Room ${rid}` });
+    joinRoomId(rid);
+  }
+
+  function normalizeRoomName(x) {
+    return String(x || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  }
+
+  function joinByName() {
+    const raw = (els.roomName.value || els.roomNameDesk.value || '').trim();
+    const q = normalizeRoomName(raw);
+    if (!q) return alert('Room name likho.');
+    ensureRoomListFresh(() => {
+      const exact = state.roomList.find(r => normalizeRoomName(r.name) === q);
+      const starts = state.roomList.find(r => normalizeRoomName(r.name).startsWith(q));
+      const includes = state.roomList.find(r => normalizeRoomName(r.name).includes(q));
+      const found = exact || starts || includes;
+      if (!found) return alert('Room nahi mila. Refresh Rooms dabake phir try karo.');
+      fillRoomFields(found);
+      joinRoomId(found.roomid);
+    });
+  }
+
+  function refreshUsers() {
+    if (!state.activeRoomId) return;
+    wsSend({ handler: 'getusers', roomid: state.activeRoomId });
+  }
+
+  function leaveCurrentRoom() {
+    const rid = state.activeRoomId;
+    if (!rid) return;
+    wsSend({ handler: 'leavechatroom', roomid: rid });
+    removeRoom(rid);
+  }
+
+  function setMode(mode) {
+    state.sendMode = mode;
+    [[els.modeNormal,'normal'], [els.modeSecret,'secret'], [els.modePm,'pm']].forEach(([el, m]) => el.classList.toggle('active', m === mode));
+  }
+
+  function selfEcho({ roomid, text, type, secret = false, userid = state.username }) {
+    ensureRoom(roomid, roomNameById(roomid) || (roomid === -1 ? 'PM' : `Room ${roomid}`));
+    const room = state.rooms.get(roomid);
+    room.messages.push({
+      username: state.username,
+      userid,
+      avatar: '',
+      text,
+      url: '',
+      media: (String(text).match(IMAGE_RE)?.[1] || ''),
+      type,
+      secret,
+      mine: true,
+      ts: new Date(),
+    });
+    if (state.activeRoomId !== roomid) room.unread = (room.unread || 0) + 1;
+    renderRooms(); renderTabs(); if (state.activeRoomId === roomid) renderMessages();
+  }
+
+  function ensurePmRoom() {
+    const rid = -1;
+    ensureRoom(rid, 'PM');
+    activateRoom(rid);
+    return rid;
+  }
+
+  function sendMessage() {
+    const text = els.messageInput.value;
+    const rid = state.activeRoomId;
+    if (!state.connected) return alert('Pehle login karo.');
+    if (!rid && state.sendMode !== 'pm') return alert('Pehle room join karo.');
+
+    let ok = false;
+    if (state.sendMode === 'normal') {
+      ok = wsSend({ handler: 'chatroommessage', roomid: rid, text, type: 'text' });
+      if (ok) selfEcho({ roomid: rid, text, type: 'text' });
+    } else if (state.sendMode === 'secret') {
+      const uid = Number((els.targetUserId.value || '').trim() || 0);
+      if (!uid) return alert('Secret ke liye target userid chahiye.');
+      ok = wsSend({ handler: 'chatroommessage', roomid: rid, userid: uid, secret: true, text, type: 'text' });
+      if (ok) selfEcho({ roomid: rid, text, type: 'text', secret: true, userid: `${state.username} → ${uid}` });
+    } else {
+      const to = (els.pmUser.value || '').trim();
+      const uid = Number((els.pmUserId.value || '').trim() || 0);
+      if (!to || !uid) return alert('PM username aur userid dono chahiye.');
+      ok = wsSend({ handler: 'message', to, userid: uid, text, type: 'text' });
+      if (ok) selfEcho({ roomid: rid || ensurePmRoom(), text, type: 'pm', userid: uid });
+    }
+    if (ok) {
+      els.messageInput.value = '';
+      autoGrowTextarea();
+    }
+  }
+
+  function findNext() {
+    const room = currentRoom();
+    const q = (els.searchInput.value || '').trim().toLowerCase();
+    if (!room || !q) return;
+    const nodes = [...els.messages.children];
+    nodes.forEach(n => n.classList.remove('search-hit'));
+    for (let i = state.searchIndex + 1; i < room.messages.length; i++) {
+      const m = room.messages[i];
+      if (`${m.username} ${m.userid} ${m.text} ${m.url}`.toLowerCase().includes(q)) {
+        state.searchIndex = i;
+        const node = nodes[i];
+        if (node) {
+          node.classList.add('search-hit');
+          node.scrollIntoView({ block: 'center', behavior: 'smooth' });
         }
+        return;
       }
     }
-
-    socket.onopen = () => {
-      addLog(`🔌 [${user}] WebSocket Open`);
-      socket.send(JSON.stringify({
-        handler: "login", username: user, password: pass, fcmt: "bot", lp: true
-      }));
-
-      setTimeout(() => {
-        socket.send(JSON.stringify({ handler: "joinchatroom", roomid: parseInt(room) }));
-        startLoop(); 
-      }, 2000);
-    };
-
-    socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.handler === "chatroommessage") {
-        const text = (data.text || "").toLowerCase();
-        if ((text.includes("kicked") || text.includes("removed")) && text.includes(user.toLowerCase())) {
-          addLog(`🔄 [${user}] Rejoining...`);
-          socket.send(JSON.stringify({ handler: "joinchatroom", roomid: parseInt(room) }));
-        }
-      }
-    };
-
-    socket.onclose = () => {
-      isRunning = false;
-      addLog(`⚠️ [${user}] Connection Lost. Retrying in 5s...`);
-      setTimeout(() => connectWS(token, user, pass, room, m1, m2, mDelay, lGap), 5000);
-    };
+    state.searchIndex = -1;
   }
 
-  function sendMsg(ws, roomid, text) {
-    if (ws && ws.readyState === 1) {
-      ws.send(JSON.stringify({
-        handler: "chatroommessage", roomid: parseInt(roomid), text: text, type: "text"
-      }));
+  function autoGrowTextarea() {
+    const t = els.messageInput;
+    t.style.height = 'auto';
+    t.style.height = Math.min(t.scrollHeight, 180) + 'px';
+  }
+
+  function updateDesktopVisibility() {
+    const desktop = isDesktop();
+    els.leftPane.classList.toggle('hidden', !desktop);
+    els.rightPane.classList.toggle('hidden', !desktop);
+    els.menuBtn.classList.toggle('hidden', desktop);
+    if (desktop) showDrawer(false);
+  }
+
+  // events
+  els.loginBtn.onclick = () => { syncLoginFields(false); connectAndLogin(); };
+  els.loginBtnDesk.onclick = () => { syncLoginFields(true); connectAndLogin(); };
+  els.disconnectBtn.onclick = () => state.ws?.close();
+  els.disconnectBtnDesk.onclick = () => state.ws?.close();
+  els.menuBtn.onclick = () => showDrawer(true);
+  els.plusBtn.onclick = () => showDrawer(true);
+  els.closeDrawer.onclick = () => showDrawer(false);
+  els.backdrop.onclick = () => showDrawer(false);
+  els.joinByIdBtn.onclick = joinById; els.joinByIdDesk.onclick = joinById;
+  els.joinByNameBtn.onclick = joinByName; els.joinByNameDesk.onclick = joinByName;
+  els.refreshRoomsBtn.onclick = refreshRoomList; els.refreshRoomsDesk.onclick = refreshRoomList; els.refreshRoomsMini.onclick = refreshRoomList;
+  els.refreshUsersTop.onclick = refreshUsers; els.openUsersMini.onclick = () => { refreshUsers(); showDrawer(true); };
+  els.leaveBtnTop.onclick = leaveCurrentRoom;
+  els.modeNormal.onclick = () => setMode('normal');
+  els.modeSecret.onclick = () => setMode('secret');
+  els.modePm.onclick = () => setMode('pm');
+  els.sendBtn.onclick = sendMessage;
+  els.searchBtn.onclick = findNext;
+  els.messageInput.addEventListener('input', autoGrowTextarea);
+  els.messageInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
     }
-  }
+  });
+  els.roomSearch.addEventListener('input', renderRoomDirectory);
+  els.roomSearchDesk.addEventListener('input', renderRoomDirectory);
+  window.addEventListener('resize', updateDesktopVisibility);
 
-  document.getElementById('startBtn').onclick = startBot;
+  updateDesktopVisibility();
+  renderTabs();
+  renderRooms();
+  renderRoomDirectory();
+  renderUsers();
+  renderMessages();
+  updateRoomHero();
+  autoGrowTextarea();
+})();
 </script>
-
 </body>
 </html>
