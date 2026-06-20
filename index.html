@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
-<title>Arya Client</title>
+<title>Arya Client Multi ID</title>
 <style>
   :root{
     --bg:#0f1115;--panel:#16181f;--panel2:#1b1f28;--panel3:#242b38;--line:#2a3140;
@@ -16,7 +16,8 @@
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{height:100%}
   body{margin:0;background:linear-gradient(180deg,#111318 0%,#141922 100%);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);overflow:hidden}
-  button,input,textarea{font:inherit}
+  button,input,textarea,select{font:inherit}
+  a{color:#7db7ff}
   .app{height:100svh;display:flex;flex-direction:column}
   .hidden{display:none!important}
   .screen{display:none;flex-direction:column;min-height:0;flex:1}
@@ -25,9 +26,9 @@
   .title{font-weight:800;font-size:17px;letter-spacing:.2px}
   .grow{flex:1}
   .icon-btn,.pill-btn,.small-btn,.send-btn,.room-chip{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:14px;cursor:pointer}
-  .icon-btn{width:40px;height:40px;display:grid;place-items:center;font-size:20px}
-  .small-btn{padding:8px 10px;font-size:12px}
-  .pill-btn{padding:10px 12px;font-weight:700}
+  .icon-btn{width:40px;height:40px;display:grid;place-items:center;font-size:20px;flex:0 0 auto}
+  .small-btn{padding:8px 10px;font-size:12px;white-space:nowrap}
+  .pill-btn{padding:10px 12px;font-weight:700;white-space:nowrap}
   .field{width:100%;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:16px;padding:13px 14px;outline:none}
   .field::placeholder,textarea::placeholder{color:#7c8aa0}
   .login-wrap{flex:1;display:grid;place-items:center;padding:18px}
@@ -36,20 +37,20 @@
   .sub{color:var(--muted);font-size:13px;line-height:1.4;margin-bottom:14px}
   .stack{display:flex;flex-direction:column;gap:10px}
   .btn-primary{width:100%;padding:13px 14px;border:none;border-radius:16px;background:var(--accentGrad);color:#fff;font-weight:800;cursor:pointer;box-shadow:0 10px 25px rgba(30,144,255,.25)}
-  .status{display:inline-flex;align-items:center;gap:8px;padding:8px 11px;border-radius:999px;border:1px solid var(--line);background:#121b28;font-size:12px;font-weight:700}
+  .status{display:inline-flex;align-items:center;gap:8px;padding:8px 11px;border-radius:999px;border:1px solid var(--line);background:#121b28;font-size:12px;font-weight:700;white-space:nowrap}
   .dot{width:10px;height:10px;border-radius:50%}.red{background:var(--red)}.amber{background:var(--amber)}.green{background:var(--green)}
   .lobby-head{padding:12px;border-bottom:1px solid var(--line);background:rgba(10,15,21,.92)}
   .join-card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:10px}
-  .row{display:flex;gap:8px}.row>*{flex:1;min-width:0}
+  .row{display:flex;gap:8px}.row>*{flex:1;min-width:0}.row button{flex:0 0 auto}
   .lobby-body{flex:1;min-height:0;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:12px}
-  .section-title{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800}
+  .section-title{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800;margin-bottom:8px}
   .joined-strip{display:flex;gap:8px;overflow:auto;padding-bottom:2px}.joined-strip::-webkit-scrollbar{display:none}
-  .room-chip{padding:10px 12px;white-space:nowrap;display:inline-flex;align-items:center;gap:8px}
+  .room-chip{padding:10px 12px;white-space:nowrap;display:inline-flex;align-items:center;gap:8px;flex:0 0 auto}
   .badge{min-width:18px;height:18px;padding:0 6px;border-radius:999px;display:grid;place-items:center;background:#d946ef;color:#fff;font-size:11px}
   .room-list{display:flex;flex-direction:column;gap:8px}
   .room-item{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:12px;cursor:pointer}
   .room-item:active{transform:scale(.995)}
-  .room-name{font-weight:800}
+  .room-name{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .meta{color:var(--muted);font-size:12px}
   .room-top{display:flex;justify-content:space-between;gap:10px;align-items:center}
   .chat-header{padding:calc(env(safe-area-inset-top) + 10px) 10px 10px;border-bottom:1px solid var(--line);background:rgba(10,15,21,.95);backdrop-filter:blur(16px);display:flex;align-items:center;gap:8px;box-shadow:var(--shadow);position:relative;z-index:15}
@@ -63,25 +64,23 @@
   .msg-text{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;line-height:1.43;font-size:14px}
   .media,.gif-media{display:block;width:min(100%,320px);max-height:320px;object-fit:contain;border-radius:14px;margin-top:8px;border:1px solid var(--line);background:#0c121a}
   .msg-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-  .composer{border-top:1px solid var(--line);background:rgba(10,15,21,.97);backdrop-filter:blur(16px);padding:8px 8px calc(8px + env(safe-area-inset-bottom));display:grid;grid-template-rows:auto auto auto;gap:6px}
+  .composer{border-top:1px solid var(--line);background:rgba(10,15,21,.97);backdrop-filter:blur(16px);padding:8px 8px calc(8px + env(safe-area-inset-bottom));display:grid;grid-template-rows:auto auto auto auto;gap:6px}
   .room-tabs{display:flex;gap:8px;overflow:auto;padding-bottom:2px}.room-tabs::-webkit-scrollbar{display:none}.tab{flex:0 0 auto;padding:8px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--text);display:inline-flex;align-items:center;gap:7px;cursor:pointer;white-space:nowrap}.tab.active{background:var(--accentGrad);border-color:#4c6ea0;color:#fff}
   .mode-strip{display:flex;gap:6px;overflow:auto}.mode-strip::-webkit-scrollbar{display:none}.mode-btn{padding:7px 9px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:12px;cursor:pointer;white-space:nowrap}.mode-btn.active{background:var(--accentGrad);border-color:#4c6ea0;color:#fff}
   .target-row{display:flex;gap:6px}.target-row>*{flex:1;min-width:0}
-  .compose-wrap{position:relative}textarea.field{min-height:48px;max-height:84px;resize:none;padding:12px 46px 12px 12px;line-height:1.25}.send-btn{position:absolute;right:7px;bottom:7px;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;background:var(--accentGrad);color:#fff;box-shadow:0 8px 18px rgba(30,144,255,.22)}
-
+  .compose-wrap{position:relative}textarea.field{min-height:48px;max-height:84px;resize:none;padding:12px 86px 12px 12px;line-height:1.25}.send-btn{position:absolute;right:7px;bottom:7px;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;background:var(--accentGrad);color:#fff;box-shadow:0 8px 18px rgba(30,144,255,.22)}
   .emoji-btn{position:absolute;right:45px;bottom:7px;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;border:1px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer}
   .emoji-panel{position:absolute;left:0;right:0;bottom:54px;background:#131823;border:1px solid var(--line);border-radius:18px;padding:10px;display:none;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px;box-shadow:var(--shadow)}
-  .emoji-panel.show{display:grid}
-  .emoji-chip{border:1px solid var(--line);background:var(--panel2);border-radius:12px;padding:8px 0;text-align:center;cursor:pointer;font-size:20px}
-  .user-item{background:linear-gradient(180deg,#171c24 0%,#131923 100%);border:1px solid var(--line);border-radius:18px;padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow)}
-  .user-card-main{min-width:0;flex:1}
-  .user-subrow{display:flex;justify-content:space-between;gap:10px;align-items:center}
-  .role-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:999px;background:rgba(255,165,0,.08);border:1px solid rgba(255,165,0,.22);color:#ffd38a;font-size:11px}
-
+  .emoji-panel.show{display:grid}.emoji-chip{border:1px solid var(--line);background:var(--panel2);border-radius:12px;padding:8px 0;text-align:center;cursor:pointer;font-size:20px}
+  .user-card-main{min-width:0;flex:1}.user-subrow{display:flex;justify-content:space-between;gap:10px;align-items:center}.role-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:999px;background:rgba(255,165,0,.08);border:1px solid rgba(255,165,0,.22);color:#ffd38a;font-size:11px}
   .users-sheet{position:fixed;inset:0;background:rgba(0,0,0,.54);display:none;z-index:60}.users-sheet.show{display:block}.users-panel{position:absolute;inset:auto 0 0 0;background:#0f1722;border-top-left-radius:22px;border-top-right-radius:22px;border-top:1px solid var(--line);height:min(76svh,640px);display:flex;flex-direction:column;box-shadow:var(--shadow)}
   .users-head{padding:12px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}.users-body{flex:1;min-height:0;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
-  .user-item{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:11px 12px;cursor:pointer}
+  .user-item{background:linear-gradient(180deg,#171c24 0%,#131923 100%);border:1px solid var(--line);border-radius:18px;padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow)}
   .muted{color:var(--muted)}
+  @media (max-width:520px){
+    .topbar,.chat-header{gap:6px} .small-btn{padding:8px 9px} .account-select{max-width:120px}
+    .target-row{display:grid;grid-template-columns:1fr 1fr} #targetUserId{grid-column:1 / -1}
+  }
 </style>
 </head>
 <body>
@@ -91,11 +90,11 @@
     <div class="login-wrap">
       <div class="login-card">
         <div class="brand">Arya Client</div>
-        <div class="sub">howdies 2.0</div>
+        <div class="sub">howdies 2.0 • Multi ID toggle version</div>
         <div class="stack">
           <input id="username" class="field" placeholder="Username" />
           <input id="password" type="password" class="field" placeholder="Password" />
-          <button id="loginBtn" class="btn-primary">Login</button>
+          <button id="loginBtn" class="btn-primary">Login All IDs</button>
         </div>
       </div>
     </div>
@@ -190,22 +189,7 @@
   const IMAGE_RE = /(https?:\/\/\S+?(?:\.png|\.jpg|\.jpeg|\.gif|\.webp|\.bmp))(?!\S)/i;
   const URL_RE = /(https?:\/\/\S+)/ig;
 
-  const state = {
-    ws: null,
-    connected: false,
-    loggedIn: false,
-    username: '',
-    password: '',
-    myName: '',
-    roomList: [],
-    roomListStamp: 0,
-    roomTimer: null,
-    rooms: new Map(),
-    activeRoomId: null,
-    sendMode: 'normal',
-    lastUid: null,
-    lastUidAt: 0,
-  };
+  const app = { accounts: new Map(), activeKey: null };
 
   const $ = id => document.getElementById(id);
   const els = {
@@ -219,6 +203,61 @@
     usersSheet: $('usersSheet'), closeUsersBtn: $('closeUsersBtn'), refreshUsersBtn: $('refreshUsersBtn'), usersTitle: $('usersTitle'), usersMeta: $('usersMeta'), usersList: $('usersList'),
   };
 
+  function keyOf(username) { return String(username || '').trim().toLowerCase(); }
+  function activeState() { return app.accounts.get(app.activeKey) || [...app.accounts.values()][0] || null; }
+  function makeAccount(username, password) {
+    return {
+      key: keyOf(username),
+      ws: null,
+      connected: false,
+      loggedIn: false,
+      username: String(username || '').trim(),
+      password,
+      myName: String(username || '').trim(),
+      roomList: [],
+      roomListStamp: 0,
+      roomTimer: null,
+      rooms: new Map(),
+      activeRoomId: null,
+      sendMode: 'normal',
+      lastUid: null,
+      lastUidAt: 0,
+      statusText: 'Offline',
+    };
+  }
+
+  function injectMultiIdUi() {
+    const style = document.createElement('style');
+    style.textContent = `
+      .account-select{max-width:150px;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:14px;padding:9px 10px;outline:none;font-weight:800}
+      .account-select option{background:#111827;color:#fff}
+      .multi-hint{font-size:12px;color:var(--muted);margin-top:-3px}
+    `;
+    document.head.appendChild(style);
+
+    els.username.placeholder = 'Username(s): sher, checkbot, song';
+    const hint = document.createElement('div');
+    hint.className = 'multi-hint';
+    hint.textContent = 'Multiple IDs ke liye comma/space se usernames daalo. Password same use hoga.';
+    els.username.insertAdjacentElement('afterend', hint);
+
+    const lobbySel = document.createElement('select');
+    lobbySel.id = 'accountSelectLobby';
+    lobbySel.className = 'account-select hidden';
+    lobbySel.title = 'Active ID';
+    els.refreshRoomsBtn.before(lobbySel);
+
+    const chatSel = document.createElement('select');
+    chatSel.id = 'accountSelectChat';
+    chatSel.className = 'account-select hidden';
+    chatSel.title = 'Active ID';
+    els.usersBtn.before(chatSel);
+
+    els.accountSelectLobby = lobbySel;
+    els.accountSelectChat = chatSel;
+    [lobbySel, chatSel].forEach(sel => sel.addEventListener('change', () => switchAccount(sel.value, true)));
+  }
+
   function showScreen(name) {
     ['loginScreen','lobbyScreen','chatScreen'].forEach(id => els[id].classList.remove('active'));
     els[name].classList.add('active');
@@ -228,36 +267,139 @@
     const cls = kind === 'ready' ? 'green' : kind === 'connected' ? 'amber' : 'red';
     els.statusPill.innerHTML = `<span class="dot ${cls}"></span>${escapeHtml(text)}`;
   }
+
+  function syncStatus() {
+    const st = activeState();
+    if (!st) return setStatus('offline','Offline');
+    const online = [...app.accounts.values()].filter(a => a.loggedIn).length;
+    const total = app.accounts.size || 1;
+    if (st.loggedIn) setStatus('ready', `${st.username} Online (${online}/${total})`);
+    else if (st.connected) setStatus('connected', `${st.username} Connecting (${online}/${total})`);
+    else setStatus('offline', `${st.username} Offline (${online}/${total})`);
+  }
+
   function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
   function linkify(s) { return s.replace(URL_RE, u => `<a href="${u}" target="_blank" rel="noopener">${u}</a>`); }
-  function wsSend(obj) { if (!state.ws || state.ws.readyState !== WebSocket.OPEN) return false; state.ws.send(JSON.stringify(obj)); return true; }
-  function currentRoom() { return state.rooms.get(state.activeRoomId) || null; }
+  function wsSend(st, obj) { if (!st?.ws || st.ws.readyState !== WebSocket.OPEN) return false; st.ws.send(JSON.stringify(obj)); return true; }
+  function currentRoom() { const st = activeState(); return st?.rooms.get(st.activeRoomId) || null; }
   function normalizeRoomName(x) { return String(x || '').toLowerCase().replace(/\s+/g,' ').trim(); }
 
+  function parseUsernames(raw) {
+    const seen = new Set();
+    return String(raw || '')
+      .split(/[\s,;]+/)
+      .map(x => x.trim())
+      .filter(Boolean)
+      .filter(x => { const k = keyOf(x); if (seen.has(k)) return false; seen.add(k); return true; });
+  }
+
   function connectAndLogin() {
-    state.username = els.username.value.trim();
-    state.password = els.password.value;
-    if (!state.username || !state.password) return alert('Please enter your username and password.');
-    state.myName = state.username;
-    try { state.ws?.close(); } catch {}
-    setStatus('connected','Connecting');
-    state.ws = new WebSocket(WS_URL);
-    state.ws.onopen = () => {
-      state.connected = true;
-      setStatus('connected','Authorizing');
-      wsSend({
-        handler:'loginnew', username:state.username, password:state.password, fcmt:'html-mobile-client', lp:true, loginType:'H',
-        devData:{ uniqueID:`HTML-${state.username}-${Math.floor(Math.random()*9000+1000)}`, manufacturer:'browser', buildNumber:'237', apiLevel:-1, language:'en', model:'HTML', brand:'browser', instanceID:'html', isEmulator:false, isLowRamDevice:false, OS:navigator.platform || 'browser' }
+    const names = parseUsernames(els.username.value);
+    const password = els.password.value;
+    if (!names.length || !password) return alert('Please enter username(s) and password.');
+
+    for (const old of app.accounts.values()) {
+      stopRoomAutoRefresh(old);
+      try { old.ws?.close(); } catch {}
+    }
+    app.accounts.clear();
+    app.activeKey = null;
+
+    names.forEach((name, i) => {
+      const acc = makeAccount(name, password);
+      app.accounts.set(acc.key, acc);
+      if (i === 0) app.activeKey = acc.key;
+    });
+    updateAccountSelectors();
+    syncStatus();
+    setStatus('connected', `Connecting ${names.length} ID${names.length > 1 ? 's' : ''}`);
+
+    names.forEach((name, i) => {
+      setTimeout(() => {
+        const acc = app.accounts.get(keyOf(name));
+        if (acc) connectAccount(acc);
+      }, i * 250);
+    });
+  }
+
+  function connectAccount(st) {
+    try { st.ws?.close(); } catch {}
+    st.connected = false;
+    st.loggedIn = false;
+    st.statusText = 'Connecting';
+    syncStatus();
+
+    const ws = new WebSocket(WS_URL);
+    st.ws = ws;
+
+    ws.onopen = () => {
+      if (app.accounts.get(st.key) !== st) return;
+      st.connected = true;
+      st.statusText = 'Authorizing';
+      syncStatus();
+      wsSend(st, {
+        handler:'loginnew', username:st.username, password:st.password, fcmt:`html-mobile-client-${st.username}`, lp:true, loginType:'H',
+        devData:{
+          uniqueID:`HTML-${st.username}-${Math.floor(Math.random()*9000+1000)}`,
+          manufacturer:'browser', buildNumber:'237', apiLevel:-1, language:'en', model:'HTML', brand:'browser',
+          instanceID:`html-${st.username}`, isEmulator:false, isLowRamDevice:false, OS:navigator.platform || 'browser'
+        }
       });
     };
-    state.ws.onmessage = ev => handlePacket(ev.data);
-    state.ws.onerror = () => setStatus('offline','WebSocket error');
-    state.ws.onclose = () => {
-      state.connected = false; state.loggedIn = false; stopRoomAutoRefresh();
-      setStatus('offline','Offline');
-      els.password.value = '';
-      if (els.chatScreen.classList.contains('active') || els.lobbyScreen.classList.contains('active')) showScreen('loginScreen');
+    ws.onmessage = ev => {
+      if (app.accounts.get(st.key) !== st) return;
+      handlePacket(st, ev.data);
     };
+    ws.onerror = () => {
+      if (app.accounts.get(st.key) !== st) return;
+      st.statusText = 'WebSocket error';
+      if (app.activeKey === st.key) setStatus('offline', `${st.username} WebSocket error`);
+    };
+    ws.onclose = () => {
+      if (app.accounts.get(st.key) !== st) return;
+      st.connected = false;
+      st.loggedIn = false;
+      st.statusText = 'Offline';
+      stopRoomAutoRefresh(st);
+      updateAccountSelectors();
+      if (app.activeKey === st.key) { syncStatus(); renderAll(); }
+      const anyOnlineOrConnecting = [...app.accounts.values()].some(a => a.connected || a.loggedIn || a.ws?.readyState === WebSocket.CONNECTING);
+      if (!anyOnlineOrConnecting && (els.chatScreen.classList.contains('active') || els.lobbyScreen.classList.contains('active'))) showScreen('loginScreen');
+    };
+  }
+
+  function updateAccountSelectors() {
+    const selectors = [els.accountSelectLobby, els.accountSelectChat].filter(Boolean);
+    selectors.forEach(sel => {
+      sel.innerHTML = '';
+      for (const a of app.accounts.values()) {
+        const opt = document.createElement('option');
+        opt.value = a.key;
+        opt.textContent = `${a.loggedIn ? '🟢' : a.connected ? '🟠' : '🔴'} ${a.username}`;
+        sel.appendChild(opt);
+      }
+      sel.value = app.activeKey || '';
+      sel.classList.toggle('hidden', app.accounts.size <= 1);
+    });
+  }
+
+  function switchAccount(key, keepScreen = true) {
+    if (!app.accounts.has(key)) return;
+    app.activeKey = key;
+    updateAccountSelectors();
+    syncStatus();
+    renderAll();
+    const st = activeState();
+    if (keepScreen && els.chatScreen.classList.contains('active') && !st?.activeRoomId) showScreen('lobbyScreen');
+  }
+
+  function renderAll() {
+    renderJoinedRooms();
+    renderRoomDirectory();
+    renderTabs();
+    renderMessages();
+    renderUsers();
+    updateChatHeader();
   }
 
   function unwrapPacket(obj) {
@@ -273,71 +415,86 @@
     return obj;
   }
 
-  function handlePacket(raw) {
+  function handlePacket(st, raw) {
     let msg;
     try { msg = unwrapPacket(JSON.parse(raw)); } catch { return; }
     const handler = msg.handler || msg.type || '';
     const blob = JSON.stringify(msg).toLowerCase();
 
-    if (!state.loggedIn && (msg.status === 'success' || msg.error === 0) && /login/.test(blob)) {
-      onLoginSuccess();
-    }
-    if (['loginnew','loginnewsuccess','login'].includes(handler) && (/success/.test(blob) || msg.error === 0)) {
-      onLoginSuccess();
-    }
+    if (!st.loggedIn && (msg.status === 'success' || msg.error === 0) && /login/.test(blob)) onLoginSuccess(st);
+    if (['loginnew','loginnewsuccess','login'].includes(handler) && (/success/.test(blob) || msg.error === 0)) onLoginSuccess(st);
+
     if (['getchatrooms','rooms','listRoom','Global'].includes(handler)) {
       const rooms = extractRooms(msg);
       if (rooms.length) {
-        state.roomList = rooms;
-        state.roomListStamp = Date.now();
-        els.roomsHint.textContent = `${rooms.length} rooms loaded`;
-        renderRoomDirectory();
+        st.roomList = rooms;
+        st.roomListStamp = Date.now();
+        if (app.activeKey === st.key) {
+          els.roomsHint.textContent = `${rooms.length} rooms loaded for ${st.username}`;
+          renderRoomDirectory();
+        }
       }
     }
+
     if (handler === 'joinchatroom' && (msg.error === 0 || msg.roomid || msg.roomId)) {
       const rid = Number(msg.roomid || msg.roomId || 0);
-      const name = msg.name || roomNameById(rid) || `Room ${rid}`;
-      ensureRoom(rid, name);
-      activateRoom(rid, true);
-      refreshUsers();
-      setStatus('ready', name);
-    }
-    if (handler === 'leavechatroom' && (msg.error === 0 || msg.roomid || msg.roomId)) {
-      const rid = Number(msg.roomid || msg.roomId || 0);
-      if (state.rooms.has(rid)) removeRoom(rid);
-    }
-    if (handler === 'getusers' || handler === 'activeoccupants') {
-      const rid = Number(msg.roomid || msg.roomId || state.activeRoomId || 0);
-      const users = extractUsers(msg);
-      if (rid && state.rooms.has(rid)) {
-        state.rooms.get(rid).users = users;
-        renderUsers();
-        updateChatHeader();
+      const name = msg.name || roomNameById(st, rid) || `Room ${rid}`;
+      ensureRoom(st, rid, name);
+      st.activeRoomId = rid;
+      if (app.activeKey === st.key) {
+        activateRoom(rid, true);
+        refreshUsers(st);
+        syncStatus();
       }
     }
-    if (handler === 'userjoin' || handler === 'userleft') {
-      if (state.activeRoomId) refreshUsers();
+
+    if (handler === 'leavechatroom' && (msg.error === 0 || msg.roomid || msg.roomId)) {
+      const rid = Number(msg.roomid || msg.roomId || 0);
+      if (st.rooms.has(rid)) removeRoom(st, rid);
     }
+
+    if (handler === 'getusers' || handler === 'activeoccupants') {
+      const rid = Number(msg.roomid || msg.roomId || st.activeRoomId || 0);
+      const users = extractUsers(msg);
+      if (rid && st.rooms.has(rid)) {
+        st.rooms.get(rid).users = users;
+        if (app.activeKey === st.key) { renderUsers(); updateChatHeader(); }
+      }
+    }
+
+    if (handler === 'userjoin' || handler === 'userleft') {
+      if (app.activeKey === st.key && st.activeRoomId) refreshUsers(st);
+    }
+
     if (handler === 'chatroommessage' || handler === 'message') {
-      const inferredRid = handler === 'message' ? -1 : (state.activeRoomId || 0);
-      const rid = Number(msg.roomid || msg.roomId || inferredRid || 0) || inferredRid || -1;
-      ensureRoom(rid, roomNameById(rid) || (rid === -1 ? 'PM' : `Room ${rid}`));
-      const room = state.rooms.get(rid);
-      room.messages.push(normalizeMessage(msg));
-      if (state.activeRoomId !== rid) room.unread = (room.unread || 0) + 1;
-      renderJoinedRooms();
-      renderTabs();
-      if (state.activeRoomId === rid) renderMessages();
+      const fallbackRid = handler === 'message' ? -1 : (st.activeRoomId || 0);
+      const rid = Number(msg.roomid || msg.roomId || fallbackRid || 0) || fallbackRid || -1;
+      ensureRoom(st, rid, roomNameById(st, rid) || (rid === -1 ? 'PM' : `Room ${rid}`));
+      const room = st.rooms.get(rid);
+      room.messages.push(normalizeMessage(st, msg));
+      if (st.activeRoomId !== rid) room.unread = (room.unread || 0) + 1;
+      if (app.activeKey === st.key) {
+        renderJoinedRooms();
+        renderTabs();
+        if (st.activeRoomId === rid) renderMessages();
+      }
     }
   }
 
-  function onLoginSuccess() {
-    state.loggedIn = true;
-    els.password.value = '';
-    setStatus('ready','Online');
-    showScreen('lobbyScreen');
-    refreshRoomList(true);
-    startRoomAutoRefresh();
+  function onLoginSuccess(st) {
+    const firstTime = !st.loggedIn;
+    st.loggedIn = true;
+    st.connected = true;
+    st.myName = st.username;
+    st.statusText = 'Online';
+    if (firstTime) {
+      els.password.value = '';
+      refreshRoomList(true, st);
+      startRoomAutoRefresh(st);
+    }
+    updateAccountSelectors();
+    if (!els.lobbyScreen.classList.contains('active') && !els.chatScreen.classList.contains('active')) showScreen('lobbyScreen');
+    if (app.activeKey === st.key) { syncStatus(); renderAll(); }
   }
 
   function extractRooms(msg) {
@@ -363,30 +520,34 @@
     return arr.map(u => ({ userid:Number(u.userid ?? u.userId ?? u.UserID ?? 0), username:String(u.username ?? u.Username ?? ''), avatar:u.avatar || u.Avatar || '', role:u.role || u.userRole || '' })).filter(Boolean);
   }
 
-  function normalizeMessage(msg) {
+  function normalizeMessage(st, msg) {
     const text = msg.text ?? '';
     const url = msg.url ?? '';
     const avatar = msg.avatar || msg.Avatar || '';
     const media = url || (String(text).match(IMAGE_RE)?.[1] || '');
-    return { username: msg.username || msg.Username || 'Unknown', userid: msg.userid ?? msg.UserID ?? msg.userId ?? 0, avatar, text, url, media, type: msg.type || 'text', secret: !!msg.secret, mine: String(msg.username || msg.Username || '').toLowerCase() === String(state.myName || '').toLowerCase(), ts: new Date() };
+    return { username: msg.username || msg.Username || 'Unknown', userid: msg.userid ?? msg.UserID ?? msg.userId ?? 0, avatar, text, url, media, type: msg.type || 'text', secret: !!msg.secret, mine: String(msg.username || msg.Username || '').toLowerCase() === String(st.myName || '').toLowerCase(), ts: new Date() };
   }
 
-  function ensureRoom(rid, name) { if (!state.rooms.has(rid)) state.rooms.set(rid, { roomid:rid, name, messages:[], users:[], unread:0 }); }
-  function roomNameById(rid) { return state.roomList.find(r => Number(r.roomid) === Number(rid))?.name || state.rooms.get(rid)?.name || ''; }
+  function ensureRoom(st, rid, name) { if (!st.rooms.has(rid)) st.rooms.set(rid, { roomid:rid, name, messages:[], users:[], unread:0 }); }
+  function roomNameById(st, rid) { return st.roomList.find(r => Number(r.roomid) === Number(rid))?.name || st.rooms.get(rid)?.name || ''; }
 
   function activateRoom(rid, openChat = false) {
-    state.activeRoomId = rid;
+    const st = activeState();
+    if (!st) return;
+    st.activeRoomId = rid;
     const room = currentRoom();
     if (room) room.unread = 0;
     renderJoinedRooms(); renderTabs(); renderMessages(); renderUsers(); updateChatHeader();
     if (openChat) showScreen('chatScreen');
   }
 
-  function removeRoom(rid) {
-    state.rooms.delete(rid);
-    if (state.activeRoomId === rid) state.activeRoomId = [...state.rooms.keys()][0] || null;
-    renderJoinedRooms(); renderTabs(); renderMessages(); renderUsers(); updateChatHeader();
-    if (!state.activeRoomId) showScreen('lobbyScreen');
+  function removeRoom(st, rid) {
+    st.rooms.delete(rid);
+    if (st.activeRoomId === rid) st.activeRoomId = [...st.rooms.keys()][0] || null;
+    if (app.activeKey === st.key) {
+      renderJoinedRooms(); renderTabs(); renderMessages(); renderUsers(); updateChatHeader();
+      if (!st.activeRoomId) showScreen('lobbyScreen');
+    }
   }
 
   function avatarNode(url) {
@@ -405,8 +566,10 @@
   }
 
   function renderJoinedRooms() {
-    const items = [...state.rooms.values()];
-    els.joinedRooms.innerHTML = items.length ? '' : '<div class="muted" style="font-size:12px">No rooms joined yet.</div>';
+    const st = activeState();
+    if (!st) { els.joinedRooms.innerHTML = '<div class="muted" style="font-size:12px">No ID logged in.</div>'; return; }
+    const items = [...st.rooms.values()];
+    els.joinedRooms.innerHTML = items.length ? '' : `<div class="muted" style="font-size:12px">${escapeHtml(st.username)} ne abhi koi room join nahi kiya.</div>`;
     for (const r of items) {
       const el = document.createElement('button');
       el.className = 'room-chip';
@@ -417,8 +580,10 @@
   }
 
   function renderRoomDirectory() {
+    const st = activeState();
+    if (!st) { els.roomDirectory.innerHTML = '<div class="muted" style="font-size:12px">No ID logged in.</div>'; return; }
     const q = (els.roomSearch.value || '').trim().toLowerCase();
-    const list = state.roomList.filter(r => !q || r.name.toLowerCase().includes(q) || String(r.roomid).includes(q)).slice(0, 200);
+    const list = st.roomList.filter(r => !q || r.name.toLowerCase().includes(q) || String(r.roomid).includes(q)).slice(0, 200);
     els.roomDirectory.innerHTML = list.length ? '' : '<div class="muted" style="font-size:12px">Room list is empty.</div>';
     for (const r of list) {
       const el = document.createElement('div');
@@ -430,11 +595,12 @@
   }
 
   function renderTabs() {
-    const items = [...state.rooms.values()];
+    const st = activeState();
+    const items = st ? [...st.rooms.values()] : [];
     els.roomTabs.innerHTML = '';
     for (const r of items) {
       const el = document.createElement('button');
-      el.className = 'tab' + (state.activeRoomId === r.roomid ? ' active' : '');
+      el.className = 'tab' + (st.activeRoomId === r.roomid ? ' active' : '');
       el.innerHTML = `<span>${escapeHtml(r.name)}</span>${r.unread ? `<span class="badge">${r.unread}</span>` : ''}`;
       el.onclick = () => activateRoom(r.roomid, true);
       els.roomTabs.appendChild(el);
@@ -443,9 +609,10 @@
   }
 
   function renderUsers() {
+    const st = activeState();
     const room = currentRoom();
     els.usersTitle.textContent = room ? `${room.name} users` : 'Room users';
-    els.usersMeta.textContent = room ? `Room ID ${room.roomid} • ${room.users?.length || 0} users` : 'No room selected';
+    els.usersMeta.textContent = room ? `${st.username} • Room ID ${room.roomid} • ${room.users?.length || 0} users` : 'No room selected';
     els.usersList.innerHTML = room && room.users.length ? '' : '<div class="muted" style="font-size:12px">No users loaded yet.</div>';
     if (!room) return;
     for (const u of room.users) {
@@ -465,11 +632,12 @@
   }
 
   function renderMessages() {
+    const st = activeState();
     const room = currentRoom();
     els.messages.innerHTML = room ? '' : '<div class="empty">Open a room from the room list.</div>';
     if (!room) return;
     if (!room.messages.length) {
-      els.messages.innerHTML = `<div class="empty">${escapeHtml(room.name)} is open. Messages will appear here.</div>`;
+      els.messages.innerHTML = `<div class="empty">${escapeHtml(st.username)} as ${escapeHtml(room.name)} open hai. Messages yahan appear honge.</div>`;
       return;
     }
     room.messages.forEach(m => {
@@ -495,21 +663,24 @@
   }
 
   function updateChatHeader() {
+    const st = activeState();
     const room = currentRoom();
     if (!room) {
-      els.chatRoomTitle.textContent = 'No room selected';
+      els.chatRoomTitle.textContent = st ? `${st.username}: No room selected` : 'No room selected';
       els.chatRoomMeta.textContent = 'Go back and open a room from the room list';
       return;
     }
-    els.chatRoomTitle.textContent = room.name;
+    els.chatRoomTitle.textContent = `${st.username} → ${room.name}`;
     els.chatRoomMeta.textContent = `Room ID ${room.roomid} • ${room.users?.length || 0} users • ${room.messages.length} messages`;
   }
 
   function handleUidTap(m) {
-    if (state.lastUid === m.userid && Date.now() - state.lastUidAt < 350) {
-      useUserTarget({ userid:m.userid, username:m.username }, true); state.lastUid = null; return;
+    const st = activeState();
+    if (!st) return;
+    if (st.lastUid === m.userid && Date.now() - st.lastUidAt < 350) {
+      useUserTarget({ userid:m.userid, username:m.username }, true); st.lastUid = null; return;
     }
-    state.lastUid = m.userid; state.lastUidAt = Date.now();
+    st.lastUid = m.userid; st.lastUidAt = Date.now();
   }
 
   function useUserTarget(u, switchSecret = true) {
@@ -526,72 +697,84 @@
   }
 
   function ensureRoomListFresh(cb) {
-    const fresh = Date.now() - state.roomListStamp < 30000 && state.roomList.length;
+    const st = activeState();
+    if (!st) return;
+    const fresh = Date.now() - st.roomListStamp < 30000 && st.roomList.length;
     if (fresh) return cb?.();
-    refreshRoomList(true);
+    refreshRoomList(true, st);
     let tries = 0;
     const t = setInterval(() => {
       tries += 1;
-      if (state.roomList.length || tries >= 6) { clearInterval(t); cb?.(); }
+      if (st.roomList.length || tries >= 6) { clearInterval(t); cb?.(); }
     }, 350);
   }
 
-  function refreshRoomList(silent = false) {
-    if (!state.connected) { if (!silent) alert('Please log in first.'); return; }
-    wsSend({ handler:'getchatrooms', admin:String(state.username || state.myName || '') });
+  function refreshRoomList(silent = false, st = activeState()) {
+    if (!st?.connected) { if (!silent) alert('Please log in first.'); return; }
+    wsSend(st, { handler:'getchatrooms', admin:String(st.username || st.myName || '') });
   }
-  function startRoomAutoRefresh() { stopRoomAutoRefresh(); state.roomTimer = setInterval(() => state.connected && refreshRoomList(true), 25000); }
-  function stopRoomAutoRefresh() { if (state.roomTimer) clearInterval(state.roomTimer); state.roomTimer = null; }
+  function startRoomAutoRefresh(st) { stopRoomAutoRefresh(st); st.roomTimer = setInterval(() => st.connected && refreshRoomList(true, st), 25000); }
+  function stopRoomAutoRefresh(st) { if (st?.roomTimer) clearInterval(st.roomTimer); if (st) st.roomTimer = null; }
 
-  function joinRoomId(rid) { rid = Number(rid || 0); if (!rid) return; ensureRoom(rid, roomNameById(rid) || `Room ${rid}`); wsSend({ handler:'joinchatroom', roomid:rid }); }
+  function joinRoomId(rid) {
+    const st = activeState();
+    rid = Number(rid || 0);
+    if (!st || !rid) return;
+    ensureRoom(st, rid, roomNameById(st, rid) || `Room ${rid}`);
+    wsSend(st, { handler:'joinchatroom', roomid:rid });
+  }
   function joinById() {
     const rid = Number((els.roomId.value || '').trim());
     if (!rid) return alert('Please enter a valid room ID.');
     joinRoomId(rid);
   }
   function joinByName() {
+    const st = activeState();
     const q = normalizeRoomName((els.roomName.value || '').trim());
+    if (!st) return alert('Please log in first.');
     if (!q) return alert('Please enter a room name.');
     ensureRoomListFresh(() => {
-      const exact = state.roomList.find(r => normalizeRoomName(r.name) === q);
-      const starts = state.roomList.find(r => normalizeRoomName(r.name).startsWith(q));
-      const includes = state.roomList.find(r => normalizeRoomName(r.name).includes(q));
+      const exact = st.roomList.find(r => normalizeRoomName(r.name) === q);
+      const starts = st.roomList.find(r => normalizeRoomName(r.name).startsWith(q));
+      const includes = st.roomList.find(r => normalizeRoomName(r.name).includes(q));
       const found = exact || starts || includes;
       if (!found) return alert('Room not found. Refresh the room list and try again.');
       els.roomId.value = found.roomid; els.roomName.value = found.name; joinRoomId(found.roomid);
     });
   }
 
-  function refreshUsers() { if (!state.activeRoomId) return; wsSend({ handler:'getusers', roomid:state.activeRoomId }); }
-  function leaveCurrentRoom() { const rid = state.activeRoomId; if (!rid) return; wsSend({ handler:'leavechatroom', roomid:rid }); removeRoom(rid); }
-  function setMode(mode) { state.sendMode = mode; [[els.modeNormal,'normal'],[els.modeSecret,'secret'],[els.modePm,'pm']].forEach(([el,m]) => el.classList.toggle('active', m === mode)); }
+  function refreshUsers(st = activeState()) { if (!st?.activeRoomId) return; wsSend(st, { handler:'getusers', roomid:st.activeRoomId }); }
+  function leaveCurrentRoom() { const st = activeState(); const rid = st?.activeRoomId; if (!st || !rid) return; wsSend(st, { handler:'leavechatroom', roomid:rid }); removeRoom(st, rid); }
+  function setMode(mode) { const st = activeState(); if (st) st.sendMode = mode; [[els.modeNormal,'normal'],[els.modeSecret,'secret'],[els.modePm,'pm']].forEach(([el,m]) => el.classList.toggle('active', m === mode)); }
 
-  function selfEcho({ roomid, text, type, secret = false, userid = state.username }) {
-    ensureRoom(roomid, roomNameById(roomid) || (roomid === -1 ? 'PM' : `Room ${roomid}`));
-    const room = state.rooms.get(roomid);
-    room.messages.push({ username:state.username, userid, avatar:'', text, url:'', media:(String(text).match(IMAGE_RE)?.[1] || ''), type, secret, mine:true, ts:new Date() });
-    if (state.activeRoomId !== roomid) room.unread = (room.unread || 0) + 1;
-    renderJoinedRooms(); renderTabs(); if (state.activeRoomId === roomid) renderMessages();
+  function selfEcho(st, { roomid, text, type, secret = false, userid = st.username }) {
+    ensureRoom(st, roomid, roomNameById(st, roomid) || (roomid === -1 ? 'PM' : `Room ${roomid}`));
+    const room = st.rooms.get(roomid);
+    room.messages.push({ username:st.username, userid, avatar:'', text, url:'', media:(String(text).match(IMAGE_RE)?.[1] || ''), type, secret, mine:true, ts:new Date() });
+    if (st.activeRoomId !== roomid) room.unread = (room.unread || 0) + 1;
+    if (app.activeKey === st.key) { renderJoinedRooms(); renderTabs(); if (st.activeRoomId === roomid) renderMessages(); }
   }
-  function ensurePmRoom() { const rid = -1; ensureRoom(rid,'PM'); activateRoom(rid,true); return rid; }
+  function ensurePmRoom(st) { const rid = -1; ensureRoom(st, rid,'PM'); st.activeRoomId = rid; if (app.activeKey === st.key) activateRoom(rid,true); return rid; }
 
   function sendMessage() {
+    const st = activeState();
     const text = els.messageInput.value;
-    const rid = state.activeRoomId;
-    if (!state.connected) return alert('Please log in first.');
-    if (!rid && state.sendMode !== 'pm') return alert('Please join a room first.');
+    const rid = st?.activeRoomId;
+    if (!st?.loggedIn) return alert('Please log in first.');
+    if (!rid && st.sendMode !== 'pm') return alert('Please join a room first.');
+    if (!String(text || '').trim()) return;
     let ok = false;
-    if (state.sendMode === 'normal') ok = wsSend({ handler:'chatroommessage', roomid:rid, text, type:'text' });
-    else if (state.sendMode === 'secret') {
+    if (st.sendMode === 'normal') ok = wsSend(st, { handler:'chatroommessage', roomid:rid, text, type:'text' });
+    else if (st.sendMode === 'secret') {
       const uid = Number((els.targetUserId.value || '').trim() || 0);
       if (!uid) return alert('Please enter a target user ID for secret mode.');
-      ok = wsSend({ handler:'chatroommessage', roomid:rid, userid:uid, secret:true, text, type:'text' });
-      if (ok) selfEcho({ roomid:rid, text, type:'text', secret:true, userid:`${state.username} → ${uid}` });
+      ok = wsSend(st, { handler:'chatroommessage', roomid:rid, userid:uid, secret:true, text, type:'text' });
+      if (ok) selfEcho(st, { roomid:rid, text, type:'text', secret:true, userid:`${st.username} → ${uid}` });
     } else {
       const to = (els.pmUser.value || '').trim(); const uid = Number((els.pmUserId.value || '').trim() || 0);
       if (!to || !uid) return alert('Please enter both PM username and user ID.');
-      ok = wsSend({ handler:'message', to, userid:uid, text, type:'text' });
-      if (ok) selfEcho({ roomid:rid || ensurePmRoom(), text, type:'pm', userid:uid });
+      ok = wsSend(st, { handler:'message', to, userid:uid, text, type:'text' });
+      if (ok) selfEcho(st, { roomid:rid || ensurePmRoom(st), text, type:'pm', userid:uid });
     }
     if (ok) { els.messageInput.value = ''; autoGrowTextarea(); }
   }
@@ -625,8 +808,10 @@
   function autoGrowTextarea() { const t = els.messageInput; t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 140) + 'px'; }
   function showUsers(show) { els.usersSheet.classList.toggle('show', !!show); if (show) renderUsers(); }
 
+  injectMultiIdUi();
+
   els.loginBtn.onclick = connectAndLogin;
-  els.disconnectBtn.onclick = () => state.ws?.close();
+  els.disconnectBtn.onclick = () => { for (const st of app.accounts.values()) { stopRoomAutoRefresh(st); try { st.ws?.close(); } catch {} } };
   els.refreshRoomsBtn.onclick = () => refreshRoomList();
   els.joinByIdBtn.onclick = joinById;
   els.joinByNameBtn.onclick = joinByName;
@@ -636,7 +821,7 @@
   els.usersBtn.onclick = () => { refreshUsers(); showUsers(true); };
   els.closeUsersBtn.onclick = () => showUsers(false);
   els.usersSheet.addEventListener('click', e => { if (e.target === els.usersSheet) showUsers(false); });
-  els.refreshUsersBtn.onclick = refreshUsers;
+  els.refreshUsersBtn.onclick = () => refreshUsers();
   els.leaveBtn.onclick = leaveCurrentRoom;
   els.modeNormal.onclick = () => setMode('normal');
   els.modeSecret.onclick = () => setMode('secret');
@@ -648,8 +833,9 @@
   document.addEventListener('click', e => { if (!e.target.closest('.compose-wrap')) toggleEmojiPanel(false); });
 
   initEmojiPanel();
-  renderJoinedRooms(); renderRoomDirectory(); renderTabs(); renderMessages(); renderUsers(); updateChatHeader(); autoGrowTextarea();
+  renderJoinedRooms(); renderRoomDirectory(); renderTabs(); renderMessages(); renderUsers(); updateChatHeader(); autoGrowTextarea(); syncStatus();
 })();
+
 </script>
 </body>
 </html>
