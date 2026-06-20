@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
-<title>Arya Client Multi ID</title>
+<title>Arya Client Multi ID KeepAlive</title>
 <style>
   :root{
     --bg:#0f1115;--panel:#16181f;--panel2:#1b1f28;--panel3:#242b38;--line:#2a3140;
@@ -90,7 +90,7 @@
     <div class="login-wrap">
       <div class="login-card">
         <div class="brand">Arya Client</div>
-        <div class="sub">howdies 2.0 • Multi ID toggle version</div>
+        <div class="sub">howdies 2.0 • Multi ID toggle version • KeepAlive/Reconnect</div>
         <div class="stack">
           <input id="username" class="field" placeholder="Username" />
           <input id="password" type="password" class="field" placeholder="Password" />
@@ -189,7 +189,13 @@
   const IMAGE_RE = /(https?:\/\/\S+?(?:\.png|\.jpg|\.jpeg|\.gif|\.webp|\.bmp))(?!\S)/i;
   const URL_RE = /(https?:\/\/\S+)/ig;
 
-  const app = { accounts: new Map(), activeKey: null };
+  // KeepAlive settings. Browser cannot send real WebSocket ping frames.
+  // This sends app-level JSON ping/pong and reconnects if no server packet is seen.
+  const HEARTBEAT_MS = 20000;
+  const STALE_AFTER_MS = 75000;
+  const ROOM_REFRESH_EVERY_HEARTBEATS = 3;
+
+  const app = { accounts: new Map(), activeKey: null, wakeLock: null };
 
   const $ = id => document.getElementById(id);
   const els = {
@@ -211,6 +217,13 @@
       ws: null,
       connected: false,
       loggedIn: false,
+      desiredOnline: false,
+      reconnectTimer: null,
+      reconnectDelay: 1000,
+      heartbeatTimer: null,
+      heartbeatCount: 0,
+      lastSeen: Date.now(),
+      lastConnectTry: 0,
       username: String(username || '').trim(),
       password,
       myName: String(username || '').trim(),
@@ -231,14 +244,14 @@
     style.textContent = `
       .account-select{max-width:150px;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:14px;padding:9px 10px;outline:none;font-weight:800}
       .account-select option{background:#111827;color:#fff}
-      .multi-hint{font-size:12px;color:var(--muted);margin-top:-3px}
+      .multi-hint{font-size:12px;color:var(--muted);margin-top:-3px;line-height:1.35}
     `;
     document.head.appendChild(style);
 
     els.username.placeholder = 'Username(s): sher, checkbot, song';
     const hint = document.createElement('div');
     hint.className = 'multi-hint';
-    hint.textContent = 'Multiple IDs ke liye comma/space se usernames daalo. Password same use hoga.';
+    hint.textContent = 'Multiple IDs ke liye comma/space se usernames daalo. Password same use hoga. KeepAlive + auto reconnect included.';
     els.username.insertAdjacentElement('afterend', hint);
 
     const lobbySel = document.createElement('select');
@@ -274,13 +287,16 @@
     const online = [...app.accounts.values()].filter(a => a.loggedIn).length;
     const total = app.accounts.size || 1;
     if (st.loggedIn) setStatus('ready', `${st.username} Online (${online}/${total})`);
-    else if (st.connected) setStatus('connected', `${st.username} Connecting (${online}/${total})`);
+    else if (st.connected || st.desiredOnline) setStatus('connected', `${st.username} Connecting (${online}/${total})`);
     else setStatus('offline', `${st.username} Offline (${online}/${total})`);
   }
 
   function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
   function linkify(s) { return s.replace(URL_RE, u => `<a href="${u}" target="_blank" rel="noopener">${u}</a>`); }
-  function wsSend(st, obj) { if (!st?.ws || st.ws.readyState !== WebSocket.OPEN) return false; st.ws.send(JSON.stringify(obj)); return true; }
+  function wsSend(st, obj) {
+    if (!st?.ws || st.ws.readyState !== WebSocket.OPEN) return false;
+    try { st.ws.send(typeof obj === 'string' ? obj : JSON.stringify(obj)); return true; } catch { return false; }
+  }
   function currentRoom() { const st = activeState(); return st?.rooms.get(st.activeRoomId) || null; }
   function normalizeRoomName(x) { return String(x || '').toLowerCase().replace(/\s+/g,' ').trim(); }
 
@@ -299,7 +315,10 @@
     if (!names.length || !password) return alert('Please enter username(s) and password.');
 
     for (const old of app.accounts.values()) {
+      old.desiredOnline = false;
+      stopHeartbeat(old);
       stopRoomAutoRefresh(old);
+      if (old.reconnectTimer) clearTimeout(old.reconnectTimer);
       try { old.ws?.close(); } catch {}
     }
     app.accounts.clear();
@@ -307,35 +326,59 @@
 
     names.forEach((name, i) => {
       const acc = makeAccount(name, password);
+      acc.desiredOnline = true;
       app.accounts.set(acc.key, acc);
       if (i === 0) app.activeKey = acc.key;
     });
     updateAccountSelectors();
     syncStatus();
     setStatus('connected', `Connecting ${names.length} ID${names.length > 1 ? 's' : ''}`);
+    requestWakeLock();
 
     names.forEach((name, i) => {
       setTimeout(() => {
         const acc = app.accounts.get(keyOf(name));
         if (acc) connectAccount(acc);
-      }, i * 250);
+      }, i * 350);
     });
   }
 
   function connectAccount(st) {
-    try { st.ws?.close(); } catch {}
+    if (!st?.desiredOnline) return;
+
+    if (st.reconnectTimer) {
+      clearTimeout(st.reconnectTimer);
+      st.reconnectTimer = null;
+    }
+
+    stopHeartbeat(st);
+
+    if (st.ws) {
+      try {
+        st.ws.onopen = null;
+        st.ws.onmessage = null;
+        st.ws.onerror = null;
+        st.ws.onclose = null;
+        st.ws.close();
+      } catch {}
+    }
+
     st.connected = false;
     st.loggedIn = false;
     st.statusText = 'Connecting';
+    st.lastConnectTry = Date.now();
     syncStatus();
 
     const ws = new WebSocket(WS_URL);
     st.ws = ws;
 
     ws.onopen = () => {
-      if (app.accounts.get(st.key) !== st) return;
+      if (app.accounts.get(st.key) !== st || st.ws !== ws) return;
       st.connected = true;
       st.statusText = 'Authorizing';
+      st.lastSeen = Date.now();
+      st.reconnectDelay = 1000;
+      startHeartbeat(st);
       syncStatus();
       wsSend(st, {
         handler:'loginnew', username:st.username, password:st.password, fcmt:`html-mobile-client-${st.username}`, lp:true, loginType:'H',
@@ -347,25 +390,117 @@
       });
     };
     ws.onmessage = ev => {
-      if (app.accounts.get(st.key) !== st) return;
+      if (app.accounts.get(st.key) !== st || st.ws !== ws) return;
       handlePacket(st, ev.data);
     };
     ws.onerror = () => {
-      if (app.accounts.get(st.key) !== st) return;
+      if (app.accounts.get(st.key) !== st || st.ws !== ws) return;
       st.statusText = 'WebSocket error';
       if (app.activeKey === st.key) setStatus('offline', `${st.username} WebSocket error`);
+      if (st.desiredOnline) scheduleReconnect(st, 'socket error');
     };
     ws.onclose = () => {
-      if (app.accounts.get(st.key) !== st) return;
+      if (app.accounts.get(st.key) !== st || st.ws !== ws) return;
+
       st.connected = false;
       st.loggedIn = false;
       st.statusText = 'Offline';
+      stopHeartbeat(st);
       stopRoomAutoRefresh(st);
       updateAccountSelectors();
-      if (app.activeKey === st.key) { syncStatus(); renderAll(); }
+
+      if (app.activeKey === st.key) {
+        syncStatus();
+        renderAll();
+      }
+
+      if (st.desiredOnline) {
+        scheduleReconnect(st, 'socket closed');
+        return;
+      }
+
       const anyOnlineOrConnecting = [...app.accounts.values()].some(a => a.connected || a.loggedIn || a.ws?.readyState === WebSocket.CONNECTING);
       if (!anyOnlineOrConnecting && (els.chatScreen.classList.contains('active') || els.lobbyScreen.classList.contains('active'))) showScreen('loginScreen');
     };
+  }
+
+  function stopHeartbeat(st) {
+    if (st?.heartbeatTimer) clearInterval(st.heartbeatTimer);
+    if (st) st.heartbeatTimer = null;
+  }
+
+  function startHeartbeat(st) {
+    stopHeartbeat(st);
+    st.heartbeatCount = 0;
+    st.lastSeen = Date.now();
+
+    st.heartbeatTimer = setInterval(() => {
+      if (!st.desiredOnline) return stopHeartbeat(st);
+
+      if (!st.ws || st.ws.readyState !== WebSocket.OPEN) {
+        scheduleReconnect(st, 'ws not open');
+        return;
+      }
+
+      st.heartbeatCount += 1;
+
+      // App-level ping. If server supports ping/pong, it may reply with pong.
+      wsSend(st, { handler:'ping', t:Date.now(), client:'arya-html' });
+
+      // Fallback keep-alive using a known lightweight request every 60 seconds.
+      if (st.loggedIn && st.heartbeatCount % ROOM_REFRESH_EVERY_HEARTBEATS === 0) {
+        wsSend(st, { handler:'getchatrooms', admin:String(st.username || st.myName || '') });
+      }
+
+      if (Date.now() - st.lastSeen > STALE_AFTER_MS) {
+        try { st.ws.close(); } catch {}
+        scheduleReconnect(st, 'heartbeat timeout');
+      }
+    }, HEARTBEAT_MS);
+  }
+
+  function scheduleReconnect(st, reason = '') {
+    if (!st?.desiredOnline) return;
+    if (st.reconnectTimer) return;
+
+    stopHeartbeat(st);
+    stopRoomAutoRefresh(st);
+
+    const delay = Math.min(st.reconnectDelay || 1000, 30000);
+    st.statusText = 'Reconnecting';
+    updateAccountSelectors();
+
+    if (app.activeKey === st.key) {
+      setStatus('connected', `${st.username} reconnecting...`);
+    }
+
+    st.reconnectTimer = setTimeout(() => {
+      st.reconnectTimer = null;
+      if (!st.desiredOnline) return;
+      st.reconnectDelay = Math.min(Math.floor(delay * 1.7), 30000);
+      connectAccount(st);
+    }, delay);
+  }
+
+  function rejoinOldRooms(st) {
+    const roomIds = [...st.rooms.keys()].filter(rid => Number(rid) > 0);
+    roomIds.forEach((rid, i) => {
+      setTimeout(() => {
+        if (st.loggedIn && st.ws?.readyState === WebSocket.OPEN) {
+          wsSend(st, { handler:'joinchatroom', roomid:Number(rid) });
+        }
+      }, i * 700);
+    });
+  }
+
+  async function requestWakeLock() {
+    // Helps while app is visible/open. It cannot force Android/iOS to run JS forever in background.
+    if (!('wakeLock' in navigator) || document.visibilityState !== 'visible') return;
+    try {
+      if (app.wakeLock) return;
+      app.wakeLock = await navigator.wakeLock.request('screen');
+      app.wakeLock.addEventListener('release', () => { app.wakeLock = null; });
+    } catch {}
   }
 
   function updateAccountSelectors() {
@@ -375,7 +510,7 @@
       for (const a of app.accounts.values()) {
         const opt = document.createElement('option');
         opt.value = a.key;
-        opt.textContent = `${a.loggedIn ? '🟢' : a.connected ? '🟠' : '🔴'} ${a.username}`;
+        opt.textContent = `${a.loggedIn ? '🟢' : a.connected || a.desiredOnline ? '🟠' : '🔴'} ${a.username}`;
         sel.appendChild(opt);
       }
       sel.value = app.activeKey || '';
@@ -416,8 +551,24 @@
   }
 
   function handlePacket(st, raw) {
+    st.lastSeen = Date.now();
+
+    const rawText = String(raw ?? '').trim();
+    if (/^ping$/i.test(rawText)) { wsSend(st, 'pong'); return; }
+    if (/^pong$/i.test(rawText)) { return; }
+
     let msg;
-    try { msg = unwrapPacket(JSON.parse(raw)); } catch { return; }
+    try { msg = unwrapPacket(JSON.parse(rawText)); } catch { return; }
+
+    st.lastSeen = Date.now();
+
+    const h0 = String(msg.handler || msg.type || '').toLowerCase();
+    if (h0 === 'ping' || h0 === 'heartbeat' || h0 === 'keepalive') {
+      wsSend(st, { handler:'pong', t:msg.t || msg.time || Date.now(), client:'arya-html' });
+      return;
+    }
+    if (h0 === 'pong') return;
+
     const handler = msg.handler || msg.type || '';
     const blob = JSON.stringify(msg).toLowerCase();
 
@@ -487,10 +638,13 @@
     st.connected = true;
     st.myName = st.username;
     st.statusText = 'Online';
+    st.lastSeen = Date.now();
+    st.reconnectDelay = 1000;
     if (firstTime) {
       els.password.value = '';
       refreshRoomList(true, st);
       startRoomAutoRefresh(st);
+      rejoinOldRooms(st);
     }
     updateAccountSelectors();
     if (!els.lobbyScreen.classList.contains('active') && !els.chatScreen.classList.contains('active')) showScreen('lobbyScreen');
@@ -811,7 +965,18 @@
   injectMultiIdUi();
 
   els.loginBtn.onclick = connectAndLogin;
-  els.disconnectBtn.onclick = () => { for (const st of app.accounts.values()) { stopRoomAutoRefresh(st); try { st.ws?.close(); } catch {} } };
+  els.disconnectBtn.onclick = () => {
+    for (const st of app.accounts.values()) {
+      st.desiredOnline = false;
+      if (st.reconnectTimer) clearTimeout(st.reconnectTimer);
+      st.reconnectTimer = null;
+      stopHeartbeat(st);
+      stopRoomAutoRefresh(st);
+      try { st.ws?.close(); } catch {}
+    }
+    setStatus('offline', 'Offline');
+    showScreen('loginScreen');
+  };
   els.refreshRoomsBtn.onclick = () => refreshRoomList();
   els.joinByIdBtn.onclick = joinById;
   els.joinByNameBtn.onclick = joinByName;
@@ -832,10 +997,44 @@
   els.messageInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
   document.addEventListener('click', e => { if (!e.target.closest('.compose-wrap')) toggleEmojiPanel(false); });
 
-  initEmojiPanel();
-  renderJoinedRooms(); renderRoomDirectory(); renderTabs(); renderMessages(); renderUsers(); updateChatHeader(); autoGrowTextarea(); syncStatus();
-})();
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      requestWakeLock();
+      for (const st of app.accounts.values()) {
+        if (!st.desiredOnline) continue;
+        if (!st.ws || st.ws.readyState !== WebSocket.OPEN) {
+          scheduleReconnect(st, 'app visible again');
+        } else {
+          wsSend(st, { handler:'ping', t:Date.now(), client:'arya-html-visible' });
+          if (st.loggedIn) {
+            refreshRoomList(true, st);
+            refreshUsers(st);
+          }
+        }
+      }
+    }
+  });
 
+  window.addEventListener('focus', () => {
+    requestWakeLock();
+    for (const st of app.accounts.values()) {
+      if (st.desiredOnline && (!st.ws || st.ws.readyState !== WebSocket.OPEN)) scheduleReconnect(st, 'window focus');
+    }
+  });
+
+  window.addEventListener('online', () => {
+    for (const st of app.accounts.values()) {
+      if (st.desiredOnline) scheduleReconnect(st, 'network online');
+    }
+  });
+
+  window.addEventListener('offline', () => {
+    setStatus('offline', 'Network offline');
+  });
+
+  initEmojiPanel();
+  renderJoinedRooms(); renderRoomDirectory(); renderTabs(); renderMessages(); renderUsers(); updateChatHeader(); autoGrowTextarea(); syncStatus(); requestWakeLock();
+})();
 </script>
 </body>
 </html>
