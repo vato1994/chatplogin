@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
-<title>Arya own Client Multi ID</title>
+<title>Arya own web Client Multi ID</title>
 <style>
   :root{
     --bg:#0f1115;--panel:#16181f;--panel2:#1b1f28;--panel3:#242b38;--line:#2a3140;
@@ -77,9 +77,12 @@
   .users-head{padding:12px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}.users-body{flex:1;min-height:0;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
   .user-item{background:linear-gradient(180deg,#171c24 0%,#131923 100%);border:1px solid var(--line);border-radius:18px;padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow)}
   .muted{color:var(--muted)}
+  .account-select{max-width:150px;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:14px;padding:9px 10px;outline:none;font-weight:800}
+  .account-select option{background:#111827;color:#fff}
+  .multi-hint{font-size:12px;color:var(--muted);margin-top:-3px}
   @media (max-width:520px){
-    .topbar,.chat-header{gap:6px} .small-btn{padding:8px 9px} .account-select{max-width:120px}
-    .target-row{display:grid;grid-template-columns:1fr 1fr} #targetUserId{grid-column:1 / -1}
+    .topbar,.chat-header{gap:6px}.small-btn{padding:8px 9px}.account-select{max-width:120px}
+    .target-row{display:grid;grid-template-columns:1fr 1fr}#targetUserId{grid-column:1 / -1}
   }
 </style>
 </head>
@@ -207,55 +210,11 @@
   function activeState() { return app.accounts.get(app.activeKey) || [...app.accounts.values()][0] || null; }
   function makeAccount(username, password) {
     return {
-      key: keyOf(username),
-      ws: null,
-      connected: false,
-      loggedIn: false,
-      username: String(username || '').trim(),
-      password,
-      myName: String(username || '').trim(),
-      roomList: [],
-      roomListStamp: 0,
-      roomTimer: null,
-      rooms: new Map(),
-      activeRoomId: null,
-      sendMode: 'normal',
-      lastUid: null,
-      lastUidAt: 0,
-      statusText: 'Offline',
+      key: keyOf(username), ws: null, connected: false, loggedIn: false,
+      username: String(username || '').trim(), password, myName: String(username || '').trim(),
+      roomList: [], roomListStamp: 0, roomTimer: null, rooms: new Map(), activeRoomId: null,
+      sendMode: 'normal', lastUid: null, lastUidAt: 0, statusText: 'Offline'
     };
-  }
-
-  function injectMultiIdUi() {
-    const style = document.createElement('style');
-    style.textContent = `
-      .account-select{max-width:150px;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:14px;padding:9px 10px;outline:none;font-weight:800}
-      .account-select option{background:#111827;color:#fff}
-      .multi-hint{font-size:12px;color:var(--muted);margin-top:-3px}
-    `;
-    document.head.appendChild(style);
-
-    els.username.placeholder = 'Username(s): sher, checkbot, song';
-    const hint = document.createElement('div');
-    hint.className = 'multi-hint';
-    hint.textContent = 'Multiple IDs ke liye comma/space se usernames daalo. Password same use hoga.';
-    els.username.insertAdjacentElement('afterend', hint);
-
-    const lobbySel = document.createElement('select');
-    lobbySel.id = 'accountSelectLobby';
-    lobbySel.className = 'account-select hidden';
-    lobbySel.title = 'Active ID';
-    els.refreshRoomsBtn.before(lobbySel);
-
-    const chatSel = document.createElement('select');
-    chatSel.id = 'accountSelectChat';
-    chatSel.className = 'account-select hidden';
-    chatSel.title = 'Active ID';
-    els.usersBtn.before(chatSel);
-
-    els.accountSelectLobby = lobbySel;
-    els.accountSelectChat = chatSel;
-    [lobbySel, chatSel].forEach(sel => sel.addEventListener('change', () => switchAccount(sel.value, true)));
   }
 
   function showScreen(name) {
@@ -283,6 +242,45 @@
   function wsSend(st, obj) { if (!st?.ws || st.ws.readyState !== WebSocket.OPEN) return false; st.ws.send(JSON.stringify(obj)); return true; }
   function currentRoom() { const st = activeState(); return st?.rooms.get(st.activeRoomId) || null; }
   function normalizeRoomName(x) { return String(x || '').toLowerCase().replace(/\s+/g,' ').trim(); }
+
+  function makePmId(userid) {
+    return `${Number(userid || 0)}-${Date.now()}${Math.floor(Math.random() * 90 + 10)}`;
+  }
+
+  function findKnownUser(usernameOrId) {
+    const st = activeState();
+    if (!st) return null;
+    const q = String(usernameOrId || '').trim().toLowerCase();
+    const qNum = Number(q || 0);
+    for (const room of st.rooms.values()) {
+      for (const u of (room.users || [])) {
+        const uname = String(u.username || '').trim().toLowerCase();
+        const uid = Number(u.userid || 0);
+        if (q && uname === q) return u;
+        if (qNum && uid === qNum) return u;
+      }
+      for (const m of (room.messages || [])) {
+        const uname = String(m.username || '').trim().toLowerCase();
+        const uid = Number(m.userid || 0);
+        if (q && uname === q) return { username: m.username, userid: uid };
+        if (qNum && uid === qNum) return { username: m.username, userid: uid };
+      }
+    }
+    return null;
+  }
+
+  function setPmTarget(u) {
+    if (!u) return;
+    const uname = String(u.username || '').trim();
+    const uid = Number(u.userid || 0);
+    if (uname) els.pmUser.value = uname;
+    if (uid) els.pmUserId.value = uid;
+    if (uid) els.targetUserId.value = uid;
+    setMode('pm');
+    ensurePmRoom(activeState());
+    showUsers(false);
+    els.messageInput.focus();
+  }
 
   function parseUsernames(raw) {
     const seen = new Set();
@@ -318,7 +316,7 @@
       setTimeout(() => {
         const acc = app.accounts.get(keyOf(name));
         if (acc) connectAccount(acc);
-      }, i * 250);
+      }, i * 1200);
     });
   }
 
@@ -338,11 +336,24 @@
       st.statusText = 'Authorizing';
       syncStatus();
       wsSend(st, {
-        handler:'loginnew', username:st.username, password:st.password, fcmt:`html-mobile-client-${st.username}`, lp:true, loginType:'H',
+        handler:'loginnew',
+        username:st.username,
+        password:st.password,
+        fcmt:`html-mobile-client-${st.username}`,
+        lp:true,
+        loginType:'H',
         devData:{
           uniqueID:`ARYAWORLD-${st.username}-${Math.floor(Math.random()*9000+1000)}`,
-          manufacturer:'browser', buildNumber:'237', apiLevel:-1, language:'en', model:'HTML', brand:'browser',
-          instanceID:`html-${st.username}`, isEmulator:false, isLowRamDevice:false, OS:navigator.platform || 'browser'
+          manufacturer:'browser',
+          buildNumber:'237',
+          apiLevel:-1,
+          language:'en',
+          model:'HTML',
+          brand:'browser',
+          instanceID:`html-${st.username}`,
+          isEmulator:false,
+          isLowRamDevice:false,
+          OS:navigator.platform || 'browser'
         }
       });
     };
@@ -517,7 +528,7 @@
   function extractUsers(msg) {
     const arr = msg.users || msg.data?.users || msg.data || [];
     if (!Array.isArray(arr)) return [];
-    return arr.map(u => ({ userid:Number(u.userid ?? u.userId ?? u.UserID ?? 0), username:String(u.username ?? u.Username ?? ''), avatar:u.avatar || u.Avatar || '', role:u.role || u.userRole || '' })).filter(Boolean);
+    return arr.map(u => ({ userid:Number(u.userid ?? u.userId ?? u.UserID ?? 0), username:String(u.username ?? u.Username ?? ''), avatar:u.avatar || u.Avatar || '', role:u.role || u.userRole || '' })).filter(u => u.username || u.userid);
   }
 
   function normalizeMessage(st, msg) {
@@ -525,10 +536,10 @@
     const url = msg.url ?? '';
     const avatar = msg.avatar || msg.Avatar || '';
     const media = url || (String(text).match(IMAGE_RE)?.[1] || '');
-    return { username: msg.username || msg.Username || 'Unknown', userid: msg.userid ?? msg.UserID ?? msg.userId ?? 0, avatar, text, url, media, type: msg.type || 'text', secret: !!msg.secret, mine: String(msg.username || msg.Username || '').toLowerCase() === String(st.myName || '').toLowerCase(), ts: new Date() };
+    return { username: msg.username || msg.Username || msg.to || 'Unknown', userid: msg.userid ?? msg.UserID ?? msg.userId ?? 0, avatar, text, url, media, type: msg.type || 'text', secret: !!msg.secret, mine: String(msg.username || msg.Username || '').toLowerCase() === String(st.myName || '').toLowerCase(), ts: new Date() };
   }
 
-  function ensureRoom(st, rid, name) { if (!st.rooms.has(rid)) st.rooms.set(rid, { roomid:rid, name, messages:[], users:[], unread:0 }); }
+  function ensureRoom(st, rid, name) { if (!st) return; if (!st.rooms.has(rid)) st.rooms.set(rid, { roomid:rid, name, messages:[], users:[], unread:0 }); }
   function roomNameById(st, rid) { return st.roomList.find(r => Number(r.roomid) === Number(rid))?.name || st.rooms.get(rid)?.name || ''; }
 
   function activateRoom(rid, openChat = false) {
@@ -613,7 +624,7 @@
     const room = currentRoom();
     els.usersTitle.textContent = room ? `${room.name} users` : 'Room users';
     els.usersMeta.textContent = room ? `${st.username} • Room ID ${room.roomid} • ${room.users?.length || 0} users` : 'No room selected';
-    els.usersList.innerHTML = room && room.users.length ? '' : '<div class="muted" style="font-size:12px">No users loaded yet.</div>';
+    els.usersList.innerHTML = room && room.users.length ? '' : '<div class="muted" style="font-size:12px">No users loaded yet. Refresh users after joining room.</div>';
     if (!room) return;
     for (const u of room.users) {
       const el = document.createElement('div');
@@ -625,7 +636,7 @@
       main.className = 'user-card-main';
       main.innerHTML = `<div class="user-subrow"><div class="room-name">${escapeHtml(u.username || 'Unknown')}</div><div class="role-pill">${escapeHtml(u.role || 'user')}</div></div><div class="meta">User ID ${escapeHtml(u.userid)}</div>`;
       el.append(av, main);
-      el.onclick = () => useUserTarget(u, false);
+      el.onclick = () => setPmTarget(u);
       el.ondblclick = () => { useUserTarget(u, true); showUsers(false); };
       els.usersList.appendChild(el);
     }
@@ -650,12 +661,27 @@
       const txt = document.createElement('div'); txt.className = 'msg-text'; txt.innerHTML = linkify(escapeHtml(m.text || '')); main.appendChild(txt);
       const media = mediaNode(m.media); if (media) main.appendChild(media);
       const actions = document.createElement('div'); actions.className = 'msg-actions';
-      const secretBtn = document.createElement('button'); secretBtn.className = 'small-btn'; secretBtn.textContent = 'Send this as secret'; secretBtn.onclick = () => quickSecretFromMessage(m);
-      const useBtn = document.createElement('button'); useBtn.className = 'small-btn'; useBtn.textContent = 'Use this ID'; useBtn.onclick = () => useUserTarget({ userid: m.userid, username: m.username }, true);
-      actions.append(secretBtn, useBtn); main.appendChild(actions);
+
+      const secretBtn = document.createElement('button');
+      secretBtn.className = 'small-btn';
+      secretBtn.textContent = 'Send this as secret';
+      secretBtn.onclick = () => quickSecretFromMessage(m);
+
+      const useBtn = document.createElement('button');
+      useBtn.className = 'small-btn';
+      useBtn.textContent = 'Use this ID';
+      useBtn.onclick = () => useUserTarget({ userid: m.userid, username: m.username }, true);
+
+      const pmBtn = document.createElement('button');
+      pmBtn.className = 'small-btn';
+      pmBtn.textContent = 'PM this user';
+      pmBtn.onclick = () => setPmTarget({ userid: m.userid, username: m.username });
+
+      actions.append(secretBtn, useBtn, pmBtn);
+      main.appendChild(actions);
       wrap.appendChild(main);
       wrap.querySelector('.uid-chip').onclick = e => { e.stopPropagation(); handleUidTap(m); };
-      wrap.ondblclick = () => useUserTarget({ userid: m.userid, username: m.username }, true);
+      wrap.ondblclick = () => setPmTarget({ userid: m.userid, username: m.username });
       els.messages.appendChild(wrap);
     });
     els.messages.scrollTop = els.messages.scrollHeight;
@@ -678,7 +704,7 @@
     const st = activeState();
     if (!st) return;
     if (st.lastUid === m.userid && Date.now() - st.lastUidAt < 350) {
-      useUserTarget({ userid:m.userid, username:m.username }, true); st.lastUid = null; return;
+      setPmTarget({ userid:m.userid, username:m.username }); st.lastUid = null; return;
     }
     st.lastUid = m.userid; st.lastUidAt = Date.now();
   }
@@ -754,7 +780,7 @@
     if (st.activeRoomId !== roomid) room.unread = (room.unread || 0) + 1;
     if (app.activeKey === st.key) { renderJoinedRooms(); renderTabs(); if (st.activeRoomId === roomid) renderMessages(); }
   }
-  function ensurePmRoom(st) { const rid = -1; ensureRoom(st, rid,'PM'); st.activeRoomId = rid; if (app.activeKey === st.key) activateRoom(rid,true); return rid; }
+  function ensurePmRoom(st) { const rid = -1; if (!st) return rid; ensureRoom(st, rid,'PM'); st.activeRoomId = rid; if (app.activeKey === st.key) activateRoom(rid,true); return rid; }
 
   function sendMessage() {
     const st = activeState();
@@ -764,17 +790,44 @@
     if (!rid && st.sendMode !== 'pm') return alert('Please join a room first.');
     if (!String(text || '').trim()) return;
     let ok = false;
-    if (st.sendMode === 'normal') ok = wsSend(st, { handler:'chatroommessage', roomid:rid, text, type:'text' });
-    else if (st.sendMode === 'secret') {
+    if (st.sendMode === 'normal') {
+      ok = wsSend(st, { handler:'chatroommessage', roomid:rid, text, type:'text' });
+    } else if (st.sendMode === 'secret') {
       const uid = Number((els.targetUserId.value || '').trim() || 0);
       if (!uid) return alert('Please enter a target user ID for secret mode.');
       ok = wsSend(st, { handler:'chatroommessage', roomid:rid, userid:uid, secret:true, text, type:'text' });
       if (ok) selfEcho(st, { roomid:rid, text, type:'text', secret:true, userid:`${st.username} → ${uid}` });
     } else {
-      const to = (els.pmUser.value || '').trim(); const uid = Number((els.pmUserId.value || '').trim() || 0);
-      if (!to || !uid) return alert('Please enter both PM username and user ID.');
-      ok = wsSend(st, { handler:'message', to, userid:uid, text, type:'text' });
-      if (ok) selfEcho(st, { roomid:rid || ensurePmRoom(st), text, type:'pm', userid:uid });
+      let to = (els.pmUser.value || '').trim();
+      let uid = Number((els.pmUserId.value || '').trim() || 0);
+
+      if ((!uid || !to) && (to || uid)) {
+        const found = findKnownUser(to || uid);
+        if (found) {
+          to = to || String(found.username || '').trim();
+          uid = uid || Number(found.userid || 0);
+          els.pmUser.value = to;
+          els.pmUserId.value = uid || '';
+        }
+      }
+
+      if (!to || !uid) {
+        return alert('PM ke liye Users list se user tap karo, ya username + user ID dono daalo.');
+      }
+
+      ok = wsSend(st, {
+        handler:'message',
+        to:to,
+        userid:uid,
+        type:'text',
+        id:makePmId(uid),
+        text:text
+      });
+
+      if (ok) {
+        const pmRid = ensurePmRoom(st);
+        selfEcho(st, { roomid:pmRid, text, type:'pm', userid:`${st.username} → ${to}` });
+      }
     }
     if (ok) { els.messageInput.value = ''; autoGrowTextarea(); }
   }
@@ -808,6 +861,30 @@
   function autoGrowTextarea() { const t = els.messageInput; t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 140) + 'px'; }
   function showUsers(show) { els.usersSheet.classList.toggle('show', !!show); if (show) renderUsers(); }
 
+  function injectMultiIdUi() {
+    els.username.placeholder = 'Username(s): sher, checkbot, song';
+    const hint = document.createElement('div');
+    hint.className = 'multi-hint';
+    hint.textContent = 'Multiple IDs ke liye comma/space se usernames daalo. Password same use hoga.';
+    els.username.insertAdjacentElement('afterend', hint);
+
+    const lobbySel = document.createElement('select');
+    lobbySel.id = 'accountSelectLobby';
+    lobbySel.className = 'account-select hidden';
+    lobbySel.title = 'Active ID';
+    els.refreshRoomsBtn.before(lobbySel);
+
+    const chatSel = document.createElement('select');
+    chatSel.id = 'accountSelectChat';
+    chatSel.className = 'account-select hidden';
+    chatSel.title = 'Active ID';
+    els.usersBtn.before(chatSel);
+
+    els.accountSelectLobby = lobbySel;
+    els.accountSelectChat = chatSel;
+    [lobbySel, chatSel].forEach(sel => sel.addEventListener('change', () => switchAccount(sel.value, true)));
+  }
+
   injectMultiIdUi();
 
   els.loginBtn.onclick = connectAndLogin;
@@ -825,7 +902,7 @@
   els.leaveBtn.onclick = leaveCurrentRoom;
   els.modeNormal.onclick = () => setMode('normal');
   els.modeSecret.onclick = () => setMode('secret');
-  els.modePm.onclick = () => setMode('pm');
+  els.modePm.onclick = () => { setMode('pm'); ensurePmRoom(activeState()); };
   els.emojiBtn.onclick = () => toggleEmojiPanel();
   els.sendBtn.onclick = sendMessage;
   els.messageInput.addEventListener('input', autoGrowTextarea);
@@ -835,7 +912,6 @@
   initEmojiPanel();
   renderJoinedRooms(); renderRoomDirectory(); renderTabs(); renderMessages(); renderUsers(); updateChatHeader(); autoGrowTextarea(); syncStatus();
 })();
-
 </script>
 </body>
 </html>
