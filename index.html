@@ -90,7 +90,7 @@
     <div class="login-wrap">
       <div class="login-card">
         <div class="brand">Arya Client</div>
-        <div class="sub">howdies 2.0 • Multi ID toggle version</div>
+        <div class="sub">howdies 2.0 • Multi ID toggle own version</div>
         <div class="stack">
           <input id="username" class="field" placeholder="Username" />
           <input id="password" type="password" class="field" placeholder="Password" />
@@ -340,7 +340,7 @@
       wsSend(st, {
         handler:'loginnew', username:st.username, password:st.password, fcmt:`html-mobile-client-${st.username}`, lp:true, loginType:'H',
         devData:{
-          uniqueID:`HTML-${st.username}-${Math.floor(Math.random()*9000+1000)}`,
+          uniqueID:`ARYAWORLD-${st.username}-${Math.floor(Math.random()*9000+1000)}`,
           manufacturer:'browser', buildNumber:'237', apiLevel:-1, language:'en', model:'HTML', brand:'browser',
           instanceID:`html-${st.username}`, isEmulator:false, isLowRamDevice:false, OS:navigator.platform || 'browser'
         }
